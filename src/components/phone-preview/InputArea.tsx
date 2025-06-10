@@ -22,7 +22,7 @@ export const InputArea = ({ textData }: InputAreaProps) => {
         </div>
         <div className={`flex flex-1 items-center overflow-hidden rounded-full border px-[10px] py-[4.5px] ${
           textData.mode === "dark" 
-            ? "border-[#48484A] bg-[#1C1C1E]" 
+            ? "border-[#48484A] bg-black" 
             : "border-[#DEDEDE] bg-white"
         }`}>
           <span className={`flex-1 truncate text-[13px] font-sf-pro ${
