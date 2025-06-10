@@ -1,4 +1,3 @@
-
 import { FakeTextData } from "@/pages/FakeTextGenerator";
 
 interface InputAreaProps {
@@ -15,7 +14,7 @@ export const InputArea = ({ textData }: InputAreaProps) => {
           textData.mode === "dark" ? "bg-[#48484A]" : "bg-[#E8E7EC]"
         }`}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`size-[14px] ${
-            textData.mode === "dark" ? "text-[#8E8E93]" : "text-[#7E7F84]"
+            textData.mode === "dark" ? "text-[#C7C7CC]" : "text-[#7E7F84]"
           }`}>
             <path d="M4 12.2616C4 12.9544 4.56808 13.5189 5.25732 13.5189H11.0074V19.269C11.0074 19.9551 11.5688 20.5232 12.2616 20.5232C12.9544 20.5232 13.5256 19.9551 13.5256 19.269V13.5189H19.269C19.9551 13.5189 20.5232 12.9544 20.5232 12.2616C20.5232 11.5688 19.9551 10.9976 19.269 10.9976H13.5256V5.25732C13.5256 4.56808 12.9544 4 12.2616 4C11.5688 4 11.0074 4.56808 11.0074 5.25732V10.9976H5.25732C4.56808 10.9976 4 11.5688 4 12.2616Z" fill="currentColor"/>
           </svg>
