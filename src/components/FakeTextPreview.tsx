@@ -97,7 +97,7 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
             textData.mode === "dark" ? "bg-black" : "bg-white"
           }`}>
             <div className="flex justify-center pb-[6px] pt-[11px] text-center">
-              <span className="text-[9px] font-medium text-[#8A898E]">Today 9:46 AM</span>
+              <span className="text-[9px] font-medium text-[#8A898E]">Today 11:25 AM</span>
             </div>
             
             {textData.messages.map((message, index) => (
