@@ -3,27 +3,48 @@ import { Button } from "@/components/ui/button";
 import { FakeTextData } from "@/pages/FakeTextGenerator";
 import { Lightbulb } from "lucide-react";
 import { PhonePreview } from "./phone-preview/PhonePreview";
+import { downloadPhonePreview } from "@/utils/imageUtils";
 
 interface FakeTextPreviewProps {
   textData: FakeTextData;
 }
 
 export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
+  const handleDownload = () => {
+    downloadPhonePreview('phone-preview', 'fake-text-conversation.png');
+  };
+
+  const handleReset = () => {
+    // Reset functionality can be implemented by parent component
+    console.log('Reset clicked');
+  };
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-xl bg-gray-50 ring ring-gray-100">
       {/* Header with Reset and Download */}
       <div className="flex w-full justify-end space-x-1.5 p-3">
-        <Button variant="outline" size="sm" className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500"
+          onClick={handleReset}
+        >
           Reset
         </Button>
-        <Button size="sm" className="h-7.5 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white">
+        <Button 
+          size="sm" 
+          className="h-7.5 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleDownload}
+        >
           Download
         </Button>
       </div>
 
       {/* Phone Preview */}
       <div className="flex flex-1 flex-col justify-center gap-3">
-        <PhonePreview textData={textData} />
+        <div id="phone-preview">
+          <PhonePreview textData={textData} />
+        </div>
         
         <div className="flex items-center justify-center gap-1">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-3 text-gray-400">

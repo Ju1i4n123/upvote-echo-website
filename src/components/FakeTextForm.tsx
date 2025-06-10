@@ -1,11 +1,11 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FakeTextData, Message } from "@/pages/FakeTextGenerator";
 import { Camera, Edit, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { handleImageUpload } from "@/utils/imageUtils";
 
 interface FakeTextFormProps {
   textData: FakeTextData;
@@ -15,9 +15,26 @@ interface FakeTextFormProps {
 export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [newMessageSender, setNewMessageSender] = useState<"sender" | "recipient">("sender");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const updateField = (field: keyof FakeTextData, value: string | Message[]) => {
     setTextData({ ...textData, [field]: value });
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const imageUrl = await handleImageUpload(file);
+        updateField("recipientAvatar", imageUrl);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   const addMessage = () => {
@@ -63,15 +80,38 @@ export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
         <div className="group/field-root flex flex-col gap-y-1 items-start">
           <Label className="font-semibold text-gray-900 text-sm">Recipient Avatar</Label>
           <div className="flex items-center gap-4">
-            <button className="group/image-input relative cursor-pointer overflow-hidden h-9 min-w-9 rounded-md bg-background shadow-xs p-px ring ring-inset ring-gray-200 hover:bg-gray-50">
-              <div className="flex size-full items-center justify-center text-gray-400">
-                <Camera className="size-[55%]" />
-              </div>
-              <div className="invisible absolute inset-0 z-0 flex items-center justify-center group-hover/image-input:visible group-hover/image-input:bg-black/40">
+            <button 
+              className="group/image-input relative cursor-pointer overflow-hidden h-9 min-w-9 rounded-md bg-background shadow-xs p-px ring ring-inset ring-gray-200 hover:bg-gray-50"
+              onClick={triggerFileUpload}
+            >
+              {textData.recipientAvatar ? (
+                <img 
+                  src={textData.recipientAvatar} 
+                  alt="Profile" 
+                  className="size-full object-cover rounded-md"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-gray-400">
+                  <Camera className="size-[55%]" />
+                </div>
+              )}
+              <div className="invisible absolute inset-0 z-0 flex items-center justify-center group-hover/image-input:visible group-hover/image-input:bg-black/40 rounded-md">
                 <Edit className="size-[45%] text-white" />
               </div>
             </button>
-            <Button variant="outline" size="sm" className="h-6 text-xs rounded-sm px-2 text-gray-500 border-gray-200">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-6 text-xs rounded-sm px-2 text-gray-500 border-gray-200"
+              onClick={triggerFileUpload}
+            >
               Upload
             </Button>
           </div>

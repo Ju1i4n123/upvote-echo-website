@@ -38,6 +38,11 @@ export const PhonePreview = ({ textData }: PhonePreviewProps) => {
         )}
       </div>
 
+      {/* Gray background area starting 110px from top */}
+      <div className={`absolute inset-x-0 ${
+        textData.mode === "dark" ? "bg-[#26252a]" : "bg-[#F6F5F6]"
+      }`} style={{ top: '110px', bottom: '0' }}></div>
+
       <MessagesArea textData={textData} />
       <InputArea textData={textData} />
     </div>
