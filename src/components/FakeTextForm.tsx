@@ -44,6 +44,17 @@ export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
     updateField("messages", updatedMessages);
   };
 
+  const toggleMessageSender = (id: string) => {
+    const updatedMessages = textData.messages.map(msg => {
+      if (msg.id === id) {
+        const newSender: "sender" | "recipient" = msg.sender === "sender" ? "recipient" : "sender";
+        return { ...msg, sender: newSender };
+      }
+      return msg;
+    });
+    updateField("messages", updatedMessages);
+  };
+
   return (
     <div className="shadow-xs flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 md:flex-row">
       <div className="flex-1 space-y-4 overflow-auto p-3 max-sm:pb-6 md:pr-5">
@@ -137,13 +148,7 @@ export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
                   <div key={message.id} className="shadow-xs relative flex rounded-md px-1 ring ring-gray-200">
                     <button 
                       className="flex h-9 w-7 shrink-0 cursor-pointer items-center justify-center"
-                      onClick={() => {
-                        const newSender = message.sender === "sender" ? "recipient" : "sender";
-                        const updatedMessages = textData.messages.map(msg =>
-                          msg.id === message.id ? { ...msg, sender: newSender } : msg
-                        );
-                        updateField("messages", updatedMessages);
-                      }}
+                      onClick={() => toggleMessageSender(message.id)}
                     >
                       <div 
                         className="size-[12px] rounded-full"
