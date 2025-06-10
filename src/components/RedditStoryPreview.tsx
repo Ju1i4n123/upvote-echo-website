@@ -56,15 +56,14 @@ export const RedditStoryPreview = ({ postData }: RedditStoryPreviewProps) => {
           className="relative w-[640px] h-[360px] max-w-[calc(640px*var(--scaling))] max-h-[calc(360px*var(--scaling))] [--scaling:0.8] max-sm:[--scaling:0.6] bg-black rounded-lg overflow-hidden shadow-lg"
         >
           {/* YouTube Video Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                <div className="w-0 h-0 border-l-[12px] border-l-white border-y-[8px] border-y-transparent ml-1"></div>
-              </div>
-              <h3 className="text-xl font-bold mb-2">YouTube Video Background</h3>
-              <p className="text-sm opacity-80">Reddit Story Overlay</p>
-            </div>
-          </div>
+          <iframe
+            src="https://www.youtube.com/embed/xKRNDalWE-E?autoplay=1&mute=1&loop=1&playlist=xKRNDalWE-E&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
+            title="YouTube video background"
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
 
           {/* Reddit Post Overlay - Centered */}
           <div className="absolute inset-0 flex items-center justify-center">
