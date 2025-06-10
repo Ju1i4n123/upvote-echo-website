@@ -1,4 +1,3 @@
-
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
@@ -13,17 +12,47 @@ class VideoExporter {
   async load() {
     if (this.loaded) return;
     
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-    this.ffmpeg.on('log', ({ message }) => {
-      console.log(message);
-    });
-    
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    
-    this.loaded = true;
+    try {
+      // Use the official jsdelivr CDN which is more reliable
+      const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+      
+      this.ffmpeg.on('log', ({ message }) => {
+        console.log('FFmpeg:', message);
+      });
+      
+      this.ffmpeg.on('progress', ({ progress }) => {
+        console.log('FFmpeg progress:', Math.round(progress * 100) + '%');
+      });
+      
+      console.log('Loading FFmpeg core...');
+      
+      await this.ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+      });
+      
+      this.loaded = true;
+      console.log('FFmpeg loaded successfully');
+    } catch (error) {
+      console.error('Failed to load FFmpeg:', error);
+      // Try alternative CDN
+      try {
+        console.log('Trying alternative CDN...');
+        const altBaseURL = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
+        
+        await this.ffmpeg.load({
+          coreURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        });
+        
+        this.loaded = true;
+        console.log('FFmpeg loaded from alternative CDN');
+      } catch (altError) {
+        console.error('Failed to load FFmpeg from alternative CDN:', altError);
+        throw new Error('Could not load FFmpeg. Please check your internet connection and try again.');
+      }
+    }
   }
 
   private getVimeoVideoUrl(videoType: 'minecraft' | 'subway-surfers'): string {
@@ -63,9 +92,6 @@ class VideoExporter {
       console.log(`Creating background video: ${videoType} for ${duration} seconds`);
       
       await this.load();
-      
-      // For now, we'll create a themed background based on the video type
-      // In production, you'd integrate with a Vimeo downloader service
       
       const canvas = document.createElement('canvas');
       canvas.width = 540;
@@ -158,14 +184,23 @@ class VideoExporter {
         }
       } catch (e) {
         // Files might not exist, continue
+        console.log('No existing files to clean up');
       }
+      
+      console.log(`Writing ${frames.length} frames...`);
       
       // Write frames
       for (let i = 0; i < frames.length; i++) {
         const response = await fetch(frames[i]);
         const blob = await response.blob();
         await this.ffmpeg.writeFile(`frame${i.toString().padStart(6, '0')}.png`, await fetchFile(blob));
+        
+        if (i % 30 === 0) {
+          console.log(`Written frame ${i}/${frames.length}`);
+        }
       }
+      
+      console.log('Creating video from frames...');
       
       await this.ffmpeg.exec([
         '-framerate', fps.toString(),
@@ -178,6 +213,7 @@ class VideoExporter {
       ]);
       
       const data = await this.ffmpeg.readFile('background.mp4');
+      console.log('Background video created successfully');
       return data as Uint8Array;
     } catch (error) {
       console.error('Error creating background video:', error);
@@ -314,3 +350,5 @@ class VideoExporter {
 }
 
 export const videoExporter = new VideoExporter();
+
+}
