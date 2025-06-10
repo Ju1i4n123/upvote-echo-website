@@ -41,7 +41,7 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
               <div className={`flex items-center justify-between pl-[31px] pr-[25px] ${
                 textData.mode === "dark" ? "text-white" : "text-black"
               }`}>
-                <span className="text-[14px] font-semibold">{formatTime(textData.deviceTime)}</span>
+                <span className="text-[14px]" style={{ fontWeight: 600 }}>{formatTime(textData.deviceTime)}</span>
                 <div className="flex items-center gap-[5px]">
                   {/* Signal, WiFi, Battery icons */}
                   <svg viewBox="0 0 27 17" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-[10px]">
@@ -64,7 +64,7 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
             </div>
             
             {/* Separator line between light and dark grey */}
-            <svg className="absolute inset-x-0 bottom-[43px]" height="0.5" width="100%">
+            <svg className="absolute inset-x-0 bottom-0" height="0.5" width="100%">
               <line className="stroke-[#B2B2B2]" x1="0" y1="0" x2="100%" y2="0" strokeWidth="1"/>
             </svg>
 
@@ -217,3 +217,5 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
     </div>
   );
 };
+
+</edits_to_apply>
