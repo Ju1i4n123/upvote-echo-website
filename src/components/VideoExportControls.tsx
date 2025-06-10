@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { videoExporter } from "@/utils/videoUtils";
@@ -20,6 +21,8 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
   const [overlayStartTime, setOverlayStartTime] = useState([2]);
   const [overlayDuration, setOverlayDuration] = useState([6]);
   const [exitAnimation, setExitAnimation] = useState<'none' | 'fade' | 'slide'>('fade');
+  const [showRedditOverlay, setShowRedditOverlay] = useState(true);
+  const [disappearAfterTime, setDisappearAfterTime] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
@@ -41,9 +44,11 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
       await videoExporter.exportVideo(elementId, {
         totalDuration: totalDuration[0],
         overlayStartTime: overlayStartTime[0],
-        overlayDuration: overlayDuration[0],
-        exitAnimation,
+        overlayDuration: disappearAfterTime ? overlayDuration[0] : totalDuration[0] - overlayStartTime[0],
+        exitAnimation: disappearAfterTime ? exitAnimation : 'none',
         backgroundVideo: selectedVideo,
+        showRedditOverlay,
+        disappearAfterTime,
       });
       
       toast({
@@ -87,6 +92,28 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
           </Select>
         </div>
 
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="show-reddit-overlay" 
+              checked={showRedditOverlay}
+              onCheckedChange={(checked) => setShowRedditOverlay(checked as boolean)}
+            />
+            <Label htmlFor="show-reddit-overlay">Show Reddit overlay</Label>
+          </div>
+          
+          {showRedditOverlay && (
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="disappear-after-time" 
+                checked={disappearAfterTime}
+                onCheckedChange={(checked) => setDisappearAfterTime(checked as boolean)}
+              />
+              <Label htmlFor="disappear-after-time">Make overlay disappear after time</Label>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-2">
           <Label>Total Video Duration: {totalDuration[0]}s</Label>
           <Slider
@@ -99,63 +126,74 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Reddit Overlay Start Time: {overlayStartTime[0]}s</Label>
-          <Slider
-            value={overlayStartTime}
-            onValueChange={setOverlayStartTime}
-            max={maxOverlayStart}
-            min={0}
-            step={0.5}
-            className="w-full"
-          />
-        </div>
+        {showRedditOverlay && (
+          <>
+            <div className="space-y-2">
+              <Label>Reddit Overlay Start Time: {overlayStartTime[0]}s</Label>
+              <Slider
+                value={overlayStartTime}
+                onValueChange={setOverlayStartTime}
+                max={maxOverlayStart}
+                min={0}
+                step={0.5}
+                className="w-full"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label>Reddit Overlay Duration: {overlayDuration[0]}s</Label>
-          <Slider
-            value={overlayDuration}
-            onValueChange={setOverlayDuration}
-            max={maxOverlayDuration}
-            min={1}
-            step={0.5}
-            className="w-full"
-          />
-        </div>
+            {disappearAfterTime && (
+              <>
+                <div className="space-y-2">
+                  <Label>Reddit Overlay Duration: {overlayDuration[0]}s</Label>
+                  <Slider
+                    value={overlayDuration}
+                    onValueChange={setOverlayDuration}
+                    max={maxOverlayDuration}
+                    min={1}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
 
-        <div className="space-y-2">
-          <Label>Exit Animation</Label>
-          <Select value={exitAnimation} onValueChange={(value: 'none' | 'fade' | 'slide') => setExitAnimation(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select exit animation" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None (Instant)</SelectItem>
-              <SelectItem value="fade">Fade Out</SelectItem>
-              <SelectItem value="slide">Slide Out</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                <div className="space-y-2">
+                  <Label>Exit Animation</Label>
+                  <Select value={exitAnimation} onValueChange={(value: 'none' | 'fade' | 'slide') => setExitAnimation(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select exit animation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (Instant)</SelectItem>
+                      <SelectItem value="fade">Fade Out</SelectItem>
+                      <SelectItem value="slide">Slide Out</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+          </>
+        )}
 
         <div className="pt-4 border-t">
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground mb-4">
-            <p>Preview Timeline:</p>
-            <div className="relative h-8 bg-muted rounded">
-              <div 
-                className="absolute h-full bg-primary/20 rounded"
-                style={{ 
-                  left: `${(overlayStartTime[0] / totalDuration[0]) * 100}%`,
-                  width: `${(overlayDuration[0] / totalDuration[0]) * 100}%`
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-xs">
-                Reddit Overlay Active
+          {showRedditOverlay && (
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground mb-4">
+              <p>Preview Timeline:</p>
+              <div className="relative h-8 bg-muted rounded">
+                <div 
+                  className="absolute h-full bg-primary/20 rounded"
+                  style={{ 
+                    left: `${(overlayStartTime[0] / totalDuration[0]) * 100}%`,
+                    width: `${((disappearAfterTime ? overlayDuration[0] : totalDuration[0] - overlayStartTime[0]) / totalDuration[0]) * 100}%`
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-xs">
+                  Reddit Overlay Active
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Background: {videoOptions[selectedVideo].label}
+                {!disappearAfterTime && " • Overlay stays for full duration"}
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Background: {videoOptions[selectedVideo].label}
-            </div>
-          </div>
+          )}
           
           <Button 
             onClick={handleExport}

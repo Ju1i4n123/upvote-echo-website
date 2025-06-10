@@ -214,11 +214,18 @@ class VideoExporter {
       overlayStartTime: number;
       overlayDuration: number;
       exitAnimation: 'none' | 'fade' | 'slide';
+      showRedditOverlay: boolean;
+      disappearAfterTime: boolean;
     }
   ): Promise<Uint8Array> {
     await this.load();
     
     await this.ffmpeg.writeFile('background.mp4', backgroundVideo);
+    
+    // If no Reddit overlay is needed, just return the background video
+    if (!options.showRedditOverlay) {
+      return backgroundVideo;
+    }
     
     const overlayResponse = await fetch(overlayImage);
     const overlayBlob = await overlayResponse.blob();
@@ -227,14 +234,19 @@ class VideoExporter {
     let filterComplex = '';
     const overlayEnd = options.overlayStartTime + options.overlayDuration;
     
-    if (options.exitAnimation === 'fade') {
-      const fadeStart = overlayEnd - 1;
-      filterComplex = `[1:v]fade=in:st=${options.overlayStartTime}:d=0.5:alpha=1,fade=out:st=${fadeStart}:d=1:alpha=1[overlay]; [0:v][overlay]overlay=(W-w)/2:(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
-    } else if (options.exitAnimation === 'slide') {
-      const slideStart = overlayEnd - 1;
-      filterComplex = `[1:v]fade=in:st=${options.overlayStartTime}:d=0.5:alpha=1[overlay]; [0:v][overlay]overlay='if(between(t,${options.overlayStartTime},${slideStart}),(W-w)/2,if(between(t,${slideStart},${overlayEnd}),(W-w)/2-W*(t-${slideStart}),-W))':(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
+    if (options.disappearAfterTime) {
+      if (options.exitAnimation === 'fade') {
+        const fadeStart = overlayEnd - 1;
+        filterComplex = `[1:v]fade=in:st=${options.overlayStartTime}:d=0.5:alpha=1,fade=out:st=${fadeStart}:d=1:alpha=1[overlay]; [0:v][overlay]overlay=(W-w)/2:(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
+      } else if (options.exitAnimation === 'slide') {
+        const slideStart = overlayEnd - 1;
+        filterComplex = `[1:v]fade=in:st=${options.overlayStartTime}:d=0.5:alpha=1[overlay]; [0:v][overlay]overlay='if(between(t,${options.overlayStartTime},${slideStart}),(W-w)/2,if(between(t,${slideStart},${overlayEnd}),(W-w)/2-W*(t-${slideStart}),-W))':(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
+      } else {
+        filterComplex = `[0:v][1:v]overlay=(W-w)/2:(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
+      }
     } else {
-      filterComplex = `[0:v][1:v]overlay=(W-w)/2:(H-h)/2:enable='between(t,${options.overlayStartTime},${overlayEnd})'`;
+      // Show overlay for the entire duration after start time
+      filterComplex = `[1:v]fade=in:st=${options.overlayStartTime}:d=0.5:alpha=1[overlay]; [0:v][overlay]overlay=(W-w)/2:(H-h)/2:enable='gte(t,${options.overlayStartTime})'`;
     }
     
     await this.ffmpeg.exec([
@@ -260,6 +272,8 @@ class VideoExporter {
       overlayDuration: number;
       exitAnimation: 'none' | 'fade' | 'slide';
       backgroundVideo: 'minecraft' | 'subway-surfers';
+      showRedditOverlay: boolean;
+      disappearAfterTime: boolean;
     }
   ): Promise<void> {
     try {
@@ -268,17 +282,24 @@ class VideoExporter {
       const backgroundVideo = await this.createBackgroundVideo(options.backgroundVideo, options.totalDuration);
       console.log('Background video created');
       
-      const overlayImage = await this.captureRedditOverlay(elementId);
-      console.log('Reddit overlay captured');
+      let finalVideo: Uint8Array;
       
-      const finalVideo = await this.createVideoWithOverlay(backgroundVideo, overlayImage, options);
-      console.log('Final video created');
+      if (options.showRedditOverlay) {
+        const overlayImage = await this.captureRedditOverlay(elementId);
+        console.log('Reddit overlay captured');
+        
+        finalVideo = await this.createVideoWithOverlay(backgroundVideo, overlayImage, options);
+        console.log('Final video created with overlay');
+      } else {
+        finalVideo = backgroundVideo;
+        console.log('Using background video only');
+      }
       
       const blob = new Blob([finalVideo], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `reddit-story-${options.backgroundVideo}.mp4`;
+      link.download = `reddit-story-${options.backgroundVideo}${options.showRedditOverlay ? '-with-overlay' : ''}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
