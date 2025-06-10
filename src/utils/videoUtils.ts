@@ -14,8 +14,8 @@ class VideoExporter {
     if (this.loaded) return;
     
     try {
-      // Use the official jsdelivr CDN which is more reliable
-      const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+      // Use unpkg CDN which is more reliable for @ffmpeg/core
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
       
       this.ffmpeg.on('log', ({ message }) => {
         console.log('FFmpeg:', message);
@@ -37,21 +37,37 @@ class VideoExporter {
       console.log('FFmpeg loaded successfully');
     } catch (error) {
       console.error('Failed to load FFmpeg:', error);
-      // Try alternative CDN
+      // Try jsdelivr as fallback
       try {
-        console.log('Trying alternative CDN...');
-        const altBaseURL = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
+        console.log('Trying jsdelivr CDN as fallback...');
+        const altBaseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
         
         await this.ffmpeg.load({
           coreURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.js`, 'text/javascript'),
           wasmURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          workerURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
         });
         
         this.loaded = true;
-        console.log('FFmpeg loaded from alternative CDN');
+        console.log('FFmpeg loaded from jsdelivr CDN');
       } catch (altError) {
-        console.error('Failed to load FFmpeg from alternative CDN:', altError);
-        throw new Error('Could not load FFmpeg. Please check your internet connection and try again.');
+        console.error('Failed to load FFmpeg from jsdelivr CDN:', altError);
+        // Try with core-st as final fallback
+        try {
+          console.log('Trying core-st as final fallback...');
+          const finalBaseURL = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
+          
+          await this.ffmpeg.load({
+            coreURL: await toBlobURL(`${finalBaseURL}/ffmpeg-core.js`, 'text/javascript'),
+            wasmURL: await toBlobURL(`${finalBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          });
+          
+          this.loaded = true;
+          console.log('FFmpeg loaded from core-st');
+        } catch (finalError) {
+          console.error('All FFmpeg loading attempts failed:', finalError);
+          throw new Error('Could not load FFmpeg. Please check your internet connection and try again.');
+        }
       }
     }
   }
