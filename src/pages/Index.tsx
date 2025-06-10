@@ -31,7 +31,7 @@ const Index = () => {
     upvotes: "",
     comments: "",
     darkMode: false,
-    wideLayout: false,
+    wideLayout: false, 
     approximateCounts: false,
     hideTrophies: false,
     hideUpvotes: false,
