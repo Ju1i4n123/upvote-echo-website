@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Download, Video } from "lucide-react";
+import { Download, Video, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { videoExporter } from "@/utils/videoUtils";
 
@@ -59,7 +59,7 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
       console.error('Export error:', error);
       toast({
         title: "Error",
-        description: "Failed to export video. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to export video. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -77,8 +77,19 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
           <Video className="size-5" />
           Video Export Settings
         </CardTitle>
+        <CardDescription>
+          Configure how your Reddit story video will be exported
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Note:</strong> Due to browser security restrictions, capturing Vimeo videos requires screen recording permission. 
+            When prompted, please select the browser tab showing this page.
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-2">
           <Label>Background Video</Label>
           <Select value={selectedVideo} onValueChange={onVideoChange}>
@@ -202,8 +213,12 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
             size="lg"
           >
             <Download className="size-4 mr-2" />
-            {isExporting ? "Exporting Video..." : "Export as MP4"}
+            {isExporting ? "Exporting Video..." : "Export as WebM Video"}
           </Button>
+          
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Exports as WebM format. For MP4, use a video converter after download.
+          </p>
         </div>
       </CardContent>
     </Card>
