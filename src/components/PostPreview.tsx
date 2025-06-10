@@ -35,7 +35,7 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
       <div className="grid flex-1 place-items-center py-12">
         <div 
           className={`flex max-w-[calc(260px*var(--scaling))] flex-col gap-[calc(7px*var(--scaling))] rounded-[calc(11px*var(--scaling))] p-[calc(12px*var(--scaling))] font-[Inter,_sans-serif] [--scaling:1] shadow-lg max-sm:[--scaling:0.8] ${
-            postData.darkMode ? 'bg-gray-900 text-white' : 'bg-white'
+            postData.darkMode ? 'bg-[#0e1113] text-white' : 'bg-white'
           } ${postData.wideLayout ? 'max-w-[calc(400px*var(--scaling))]' : ''}`}
           style={{ fontFeatureSettings: 'normal' }}
         >
@@ -50,7 +50,9 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
             </div>
             <div className="flex flex-col items-start gap-[calc(2px*var(--scaling))]">
               <div className="flex items-center gap-1">
-                <span className="text-[calc(13px*var(--scaling))] font-bold leading-[calc(16px*var(--scaling))] text-[#11151A]">
+                <span className={`text-[calc(13px*var(--scaling))] font-bold leading-[calc(16px*var(--scaling))] ${
+                  postData.darkMode ? 'text-white' : 'text-[#11151A]'
+                }`}>
                   {postData.subreddit || "postfully.app"}
                 </span>
                 {postData.badge === "Verified" && (
@@ -69,7 +71,9 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
 
           {/* Post Content */}
           <div className="flex flex-col gap-[calc(10px*var(--scaling))]">
-            <span className="whitespace-pre-wrap break-words text-[calc(16px*var(--scaling))] font-bold leading-[calc(20px*var(--scaling))] text-[#11151A]">
+            <span className={`whitespace-pre-wrap break-words text-[calc(16px*var(--scaling))] font-bold leading-[calc(20px*var(--scaling))] ${
+              postData.darkMode ? 'text-white' : 'text-[#11151A]'
+            }`}>
               {postData.text || "Create your custom Reddit story"}
             </span>
             

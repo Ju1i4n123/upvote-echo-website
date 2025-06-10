@@ -13,7 +13,7 @@ export const MessageBubble = ({ message, sender, mode }: MessageBubbleProps) => 
           <div className={`relative flex max-w-[198px] break-words rounded-[14px] px-[10px] py-[6px] ${
             sender === "sender" 
               ? "bg-[#007AFF]" 
-              : mode === "dark" ? "bg-[#2C2C2E]" : "bg-[#E9E9EB]"
+              : mode === "dark" ? "bg-[#26252a]" : "bg-[#E9E9EB]"
           }`}>
             <span className={`w-full whitespace-pre-wrap text-[13px]/4 ${
               sender === "sender" 
@@ -32,7 +32,7 @@ export const MessageBubble = ({ message, sender, mode }: MessageBubbleProps) => 
                   : "left-[-4.2578px] scale-x-[-1]"
               } ${
                 sender === "recipient" 
-                  ? (mode === "dark" ? "text-[#2C2C2E]" : "text-[#E9E9EB]")
+                  ? (mode === "dark" ? "text-[#26252a]" : "text-[#E9E9EB]")
                   : "text-[#007AFF]"
               }`}
             >

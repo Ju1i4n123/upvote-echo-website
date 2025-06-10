@@ -8,7 +8,7 @@ interface InputAreaProps {
 export const InputArea = ({ textData }: InputAreaProps) => {
   return (
     <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-col ${
-      textData.mode === "dark" ? "bg-black" : "bg-[#FCFCFC]"
+      textData.mode === "dark" ? "bg-[#26252a]" : "bg-[#FCFCFC]"
     }`}>
       <div className="mb-[23px] flex items-center gap-[10px] px-[11px] pt-[4px]">
         <div className="flex size-[28px] items-center justify-center rounded-full bg-[#E8E7EC] text-[#7E7F84]">
