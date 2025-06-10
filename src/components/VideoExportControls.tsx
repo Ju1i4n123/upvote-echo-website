@@ -18,8 +18,20 @@ export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => 
   const [overlayStartTime, setOverlayStartTime] = useState([2]);
   const [overlayDuration, setOverlayDuration] = useState([6]);
   const [exitAnimation, setExitAnimation] = useState<'none' | 'fade' | 'slide'>('fade');
+  const [selectedVideo, setSelectedVideo] = useState<'minecraft' | 'subway-surfers'>('minecraft');
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+
+  const videoOptions = {
+    minecraft: {
+      label: "Minecraft",
+      url: "https://vimeo.com/1092266536/7a17cf4cf9"
+    },
+    'subway-surfers': {
+      label: "Subway Surfers", 
+      url: "https://vimeo.com/1092266136/db7b597083"
+    }
+  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -30,6 +42,7 @@ export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => 
         overlayStartTime: overlayStartTime[0],
         overlayDuration: overlayDuration[0],
         exitAnimation,
+        backgroundVideo: selectedVideo,
       });
       
       toast({
@@ -60,6 +73,19 @@ export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label>Background Video</Label>
+          <Select value={selectedVideo} onValueChange={(value: 'minecraft' | 'subway-surfers') => setSelectedVideo(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select background video" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="minecraft">Minecraft</SelectItem>
+              <SelectItem value="subway-surfers">Subway Surfers</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-2">
           <Label>Total Video Duration: {totalDuration[0]}s</Label>
           <Slider
@@ -124,6 +150,9 @@ export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => 
               <div className="absolute inset-0 flex items-center justify-center text-xs">
                 Reddit Overlay Active
               </div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Background: {videoOptions[selectedVideo].label}
             </div>
           </div>
           

@@ -26,27 +26,74 @@ class VideoExporter {
     this.loaded = true;
   }
 
-  async downloadYouTubeVideo(videoId: string, duration: number): Promise<Uint8Array> {
-    // Use a public API to get YouTube video URL
+  private getVimeoVideoUrl(videoType: 'minecraft' | 'subway-surfers'): string {
+    const videoUrls = {
+      minecraft: 'https://vimeo.com/1092266536/7a17cf4cf9',
+      'subway-surfers': 'https://vimeo.com/1092266136/db7b597083'
+    };
+    return videoUrls[videoType];
+  }
+
+  private async downloadVimeoVideo(videoType: 'minecraft' | 'subway-surfers'): Promise<string> {
+    // Extract video ID from Vimeo URL
+    const vimeoUrl = this.getVimeoVideoUrl(videoType);
+    const videoId = vimeoUrl.split('/')[3];
+    
     try {
-      const response = await fetch(`https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all`);
+      // Get Vimeo video info
+      const response = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(vimeoUrl)}`);
+      const videoInfo = await response.json();
       
-      // For now, we'll create a more realistic background video
-      // In production, you'd integrate with a YouTube downloader API
+      // For now, we'll use a proxy approach or create a placeholder
+      // In a real implementation, you'd need a backend service to handle Vimeo downloads
+      // due to CORS restrictions
+      
+      console.log('Vimeo video info:', videoInfo);
+      
+      // Return the direct Vimeo player URL for now
+      return `https://player.vimeo.com/video/${videoId}`;
+    } catch (error) {
+      console.error('Error getting Vimeo video:', error);
+      throw error;
+    }
+  }
+
+  async createBackgroundVideo(videoType: 'minecraft' | 'subway-surfers', duration: number): Promise<Uint8Array> {
+    try {
+      console.log(`Creating background video: ${videoType} for ${duration} seconds`);
+      
+      await this.load();
+      
+      // For now, we'll create a themed background based on the video type
+      // In production, you'd integrate with a Vimeo downloader service
+      
       const canvas = document.createElement('canvas');
       canvas.width = 540;
       canvas.height = 960;
       const ctx = canvas.getContext('2d')!;
       
-      // Create a more video-like background with moving elements
       const frames: string[] = [];
       const fps = 30;
       const totalFrames = duration * fps;
       
+      // Theme colors based on video type
+      const themes = {
+        minecraft: {
+          colors: ['#8B4513', '#228B22', '#4169E1', '#32CD32'],
+          name: 'Minecraft'
+        },
+        'subway-surfers': {
+          colors: ['#FF6B35', '#F7931E', '#FFD23F', '#06FFA5'],
+          name: 'Subway Surfers'
+        }
+      };
+      
+      const theme = themes[videoType];
+      
       for (let i = 0; i < totalFrames; i++) {
         const time = i / fps;
         
-        // Create a gradient that moves and changes
+        // Create themed gradient
         const gradient = ctx.createLinearGradient(
           0, 
           Math.sin(time * 0.5) * 200 + 480, 
@@ -54,40 +101,52 @@ class VideoExporter {
           Math.cos(time * 0.3) * 200 + 480
         );
         
-        // Dynamic colors based on time
-        const hue1 = (time * 30) % 360;
-        const hue2 = (time * 30 + 180) % 360;
-        gradient.addColorStop(0, `hsl(${hue1}, 70%, 50%)`);
-        gradient.addColorStop(0.5, `hsl(${(hue1 + 60) % 360}, 60%, 40%)`);
-        gradient.addColorStop(1, `hsl(${hue2}, 70%, 60%)`);
+        const colorIndex = Math.floor(time * 2) % theme.colors.length;
+        const nextColorIndex = (colorIndex + 1) % theme.colors.length;
+        
+        gradient.addColorStop(0, theme.colors[colorIndex]);
+        gradient.addColorStop(0.5, theme.colors[nextColorIndex]);
+        gradient.addColorStop(1, theme.colors[(colorIndex + 2) % theme.colors.length]);
         
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 540, 960);
         
-        // Add floating particles
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        for (let j = 0; j < 8; j++) {
-          const x = 270 + Math.sin(time * 0.8 + j * 0.8) * 200;
-          const y = 480 + Math.cos(time * 0.6 + j * 1.2) * 300;
-          const size = 20 + Math.sin(time * 2 + j) * 15;
-          ctx.beginPath();
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fill();
+        // Add themed elements
+        if (videoType === 'minecraft') {
+          // Add block-like shapes
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          for (let j = 0; j < 6; j++) {
+            const x = (j % 3) * 180 + Math.sin(time + j) * 50;
+            const y = Math.floor(j / 3) * 400 + 200 + Math.cos(time * 0.5 + j) * 100;
+            const size = 60 + Math.sin(time * 2 + j) * 20;
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+          }
+        } else {
+          // Add rail-like lines and moving elements for subway surfers
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.lineWidth = 8;
+          for (let j = 0; j < 3; j++) {
+            const x = 135 + j * 135;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, 960);
+            ctx.stroke();
+          }
+          
+          // Add moving circles
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          for (let j = 0; j < 5; j++) {
+            const x = 270 + Math.sin(time * 3 + j * 1.2) * 200;
+            const y = ((time * 200 + j * 200) % 1200) - 120;
+            const size = 30 + Math.sin(time * 4 + j) * 10;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
-        
-        // Add some geometric shapes
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.save();
-        ctx.translate(270, 480);
-        ctx.rotate(time * 0.5);
-        ctx.fillRect(-50, -50, 100, 100);
-        ctx.restore();
         
         frames.push(canvas.toDataURL('image/png'));
       }
-      
-      // Convert frames to video using FFmpeg
-      await this.load();
       
       // Clear any existing files
       try {
@@ -130,10 +189,8 @@ class VideoExporter {
     const element = document.getElementById(elementId);
     if (!element) throw new Error('Element not found');
     
-    // Use html2canvas to capture the Reddit overlay
     const html2canvas = (await import('html2canvas')).default;
     
-    // Find the Reddit overlay specifically
     const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
     if (!redditOverlay) throw new Error('Reddit overlay not found');
     
@@ -161,10 +218,8 @@ class VideoExporter {
   ): Promise<Uint8Array> {
     await this.load();
     
-    // Write background video
     await this.ffmpeg.writeFile('background.mp4', backgroundVideo);
     
-    // Write overlay image
     const overlayResponse = await fetch(overlayImage);
     const overlayBlob = await overlayResponse.blob();
     await this.ffmpeg.writeFile('overlay.png', await fetchFile(overlayBlob));
@@ -204,29 +259,26 @@ class VideoExporter {
       overlayStartTime: number;
       overlayDuration: number;
       exitAnimation: 'none' | 'fade' | 'slide';
+      backgroundVideo: 'minecraft' | 'subway-surfers';
     }
   ): Promise<void> {
     try {
       console.log('Starting video export...');
       
-      // Create background video
-      const backgroundVideo = await this.downloadYouTubeVideo('default', options.totalDuration);
+      const backgroundVideo = await this.createBackgroundVideo(options.backgroundVideo, options.totalDuration);
       console.log('Background video created');
       
-      // Capture Reddit overlay
       const overlayImage = await this.captureRedditOverlay(elementId);
       console.log('Reddit overlay captured');
       
-      // Create final video
       const finalVideo = await this.createVideoWithOverlay(backgroundVideo, overlayImage, options);
       console.log('Final video created');
       
-      // Download the result
       const blob = new Blob([finalVideo], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'reddit-story.mp4';
+      link.download = `reddit-story-${options.backgroundVideo}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
