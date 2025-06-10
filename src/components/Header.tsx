@@ -23,6 +23,16 @@ export const Header = () => {
               Reddit Post Template
             </Link>
             <Link 
+              to="/reddit-story" 
+              className={`transition-colors ${
+                location.pathname === "/reddit-story" 
+                  ? "text-gray-900 font-medium" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Reddit Story
+            </Link>
+            <Link 
               to="/fake-text-generator" 
               className={`transition-colors ${
                 location.pathname === "/fake-text-generator" 
