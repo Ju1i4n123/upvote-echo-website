@@ -7,6 +7,7 @@ import { VerifiedIcon } from "@/components/icons/VerifiedIcon";
 import { ShareIcon } from "@/components/icons/ShareIcon";
 import { Lightbulb } from "lucide-react";
 import { downloadRedditPost } from "@/utils/imageUtils";
+import { useEffect, useRef } from "react";
 
 interface RedditStoryPreviewProps {
   postData: PostData;
@@ -15,6 +16,44 @@ interface RedditStoryPreviewProps {
 }
 
 export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio }: RedditStoryPreviewProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d')!;
+    canvas.width = 540;
+    canvas.height = 960;
+
+    // Create animated background
+    const animate = () => {
+      const time = Date.now() * 0.001;
+      
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 540, 960);
+      gradient.addColorStop(0, `hsl(${time * 20 % 360}, 70%, 60%)`);
+      gradient.addColorStop(1, `hsl(${(time * 20 + 180) % 360}, 70%, 40%)`);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 540, 960);
+      
+      // Add moving shapes
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      for (let i = 0; i < 5; i++) {
+        const x = 270 + Math.sin(time + i) * 150;
+        const y = 480 + Math.cos(time * 0.5 + i) * 200;
+        ctx.beginPath();
+        ctx.arc(x, y, 30 + Math.sin(time * 2 + i) * 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      requestAnimationFrame(animate);
+    };
+    
+    animate();
+  }, []);
+
   const formatCount = (count: string) => {
     if (postData.approximateCounts && count) {
       return count + "+";
@@ -68,17 +107,11 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio }: Re
           id="reddit-story-preview"
           className="relative w-[540px] h-[960px] max-w-[calc(540px*var(--scaling))] max-h-[calc(960px*var(--scaling))] [--scaling:0.7] max-sm:[--scaling:0.4] bg-black rounded-lg overflow-hidden shadow-lg"
         >
-          {/* YouTube Video Background - 9:16 format */}
-          <div className="absolute inset-0">
-            <iframe
-              src="https://www.youtube.com/embed/xKRNDalWE-E?autoplay=1&mute=1&loop=1&playlist=xKRNDalWE-E&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
-              title="YouTube video background"
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+          {/* Animated Canvas Background - 9:16 format */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
 
           {/* Reddit Post Overlay - Positioned in center */}
           <div className="absolute inset-0 flex items-center justify-center">

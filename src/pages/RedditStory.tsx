@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { PostForm } from "@/components/PostForm";
 import { RedditStoryPreview } from "@/components/RedditStoryPreview";
 import { AudioStoryForm } from "@/components/AudioStoryForm";
+import { VideoExportControls } from "@/components/VideoExportControls";
 import { PostData } from "@/pages/Index";
 
 const RedditStory = () => {
@@ -58,7 +59,7 @@ const RedditStory = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Reddit Story Template</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Create custom Reddit stories overlaid on YouTube video backgrounds for your content creation needs.
+            Create custom Reddit stories overlaid on video backgrounds and export them as MP4 files.
           </p>
         </div>
         
@@ -66,6 +67,7 @@ const RedditStory = () => {
           <div className="space-y-6">
             <PostForm postData={postData} setPostData={setPostData} />
             <AudioStoryForm onAudioGenerated={handleAudioGenerated} />
+            <VideoExportControls elementId="reddit-story-preview" />
           </div>
           <RedditStoryPreview 
             postData={postData} 
