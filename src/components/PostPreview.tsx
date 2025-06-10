@@ -1,11 +1,11 @@
 
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PostData } from "@/pages/Index";
 import { UpvoteIcon } from "@/components/icons/UpvoteIcon";
 import { CommentIcon } from "@/components/icons/CommentIcon";
 import { VerifiedIcon } from "@/components/icons/VerifiedIcon";
 import { ShareIcon } from "@/components/icons/ShareIcon";
+import { Lightbulb } from "lucide-react";
 
 interface PostPreviewProps {
   postData: PostData;
@@ -20,69 +20,99 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Preview</h3>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm">Reset</Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Download</Button>
-        </div>
+    <div className="flex flex-1 flex-col rounded-xl bg-gray-50 ring ring-gray-100">
+      {/* Header with Reset and Download */}
+      <div className="flex justify-end space-x-1.5 p-3">
+        <Button variant="outline" size="sm" className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500">
+          Reset
+        </Button>
+        <Button size="sm" className="h-7.5 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white">
+          Download
+        </Button>
       </div>
-      
-      <Card className={`p-4 ${postData.darkMode ? 'bg-gray-900 text-white' : 'bg-white'} ${postData.wideLayout ? 'max-w-2xl' : 'max-w-md'} mx-auto`}>
-        <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
-            <img 
-              src="/lovable-uploads/36c19aa4-e4d2-4e24-bb53-2a8eb94e5a5e.png" 
-              alt="Reddit Avatar" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="font-medium text-orange-500">r/{postData.subreddit}</span>
-              {postData.badge === "Verified" && (
-                <VerifiedIcon className="w-3 h-3" />
-              )}
+
+      {/* Reddit Post Preview */}
+      <div className="grid flex-1 place-items-center py-12">
+        <div 
+          className={`flex max-w-[calc(260px*var(--scaling))] flex-col gap-[calc(7px*var(--scaling))] rounded-[calc(11px*var(--scaling))] p-[calc(12px*var(--scaling))] font-[Inter,_sans-serif] [--scaling:1] shadow-lg max-sm:[--scaling:0.8] ${
+            postData.darkMode ? 'bg-gray-900 text-white' : 'bg-white'
+          } ${postData.wideLayout ? 'max-w-[calc(400px*var(--scaling))]' : ''}`}
+          style={{ fontFeatureSettings: 'normal' }}
+        >
+          {/* User Info */}
+          <div className="flex items-center gap-[calc(7px*var(--scaling))]">
+            <div className="relative size-[calc(36px*var(--scaling))] shrink-0 overflow-hidden rounded-full">
+              <img 
+                alt="Default Reddit avatar" 
+                className="absolute size-full object-cover" 
+                src="/lovable-uploads/36c19aa4-e4d2-4e24-bb53-2a8eb94e5a5e.png"
+              />
+            </div>
+            <div className="flex flex-col items-start gap-[calc(2px*var(--scaling))]">
+              <div className="flex items-center gap-1">
+                <span className="text-[calc(13px*var(--scaling))] font-bold leading-[calc(16px*var(--scaling))] text-[#11151A]">
+                  {postData.subreddit || "postfully.app"}
+                </span>
+                {postData.badge === "Verified" && (
+                  <VerifiedIcon className="mb-[calc(1px*var(--scaling))] inline size-[calc(12px*var(--scaling))]" />
+                )}
+              </div>
               {!postData.hideTrophies && (
-                <div className="flex items-center">
-                  <img 
-                    src="/lovable-uploads/7d0adf6f-a83d-42da-9453-9d8ba8d018c9.png" 
-                    alt="Trophies" 
-                    className="h-4"
-                  />
-                </div>
+                <img 
+                  alt="Reddit trophies" 
+                  src="/lovable-uploads/7d0adf6f-a83d-42da-9453-9d8ba8d018c9.png" 
+                  className="h-[calc(11px*var(--scaling))] w-[calc(137px*var(--scaling))]"
+                />
               )}
             </div>
+          </div>
+
+          {/* Post Content */}
+          <div className="flex flex-col gap-[calc(10px*var(--scaling))]">
+            <span className="whitespace-pre-wrap break-words text-[calc(16px*var(--scaling))] font-bold leading-[calc(20px*var(--scaling))] text-[#11151A]">
+              {postData.text || "Create your custom Reddit story"}
+            </span>
             
-            <h3 className="font-medium mb-2">{postData.text}</h3>
-            
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              {!postData.hideUpvotes && (
-                <div className="flex items-center space-x-1">
-                  <UpvoteIcon className="w-4 h-4" />
-                  <span>{formatCount(postData.upvotes)}</span>
-                </div>
-              )}
-              
-              {!postData.hideComments && (
-                <div className="flex items-center space-x-1">
-                  <CommentIcon className="w-4 h-4" />
-                  <span>{formatCount(postData.comments)}</span>
-                </div>
-              )}
+            {/* Actions */}
+            <div className="flex justify-between gap-[calc(14px*var(--scaling))]">
+              <div className="flex items-center gap-[inherit]">
+                {!postData.hideUpvotes && (
+                  <div className="flex items-center gap-[calc(4px*var(--scaling))] text-[#5C6C74]">
+                    <UpvoteIcon className="size-[calc(16px*var(--scaling))]" />
+                    <span className="text-[calc(12px*var(--scaling))] font-semibold">
+                      {formatCount(postData.upvotes) || "249"}
+                    </span>
+                  </div>
+                )}
+                
+                {!postData.hideComments && (
+                  <div className="flex items-center gap-[calc(4px*var(--scaling))] text-[#5C6C74]">
+                    <CommentIcon className="size-[calc(16px*var(--scaling))]" />
+                    <span className="text-[calc(12px*var(--scaling))] font-semibold">
+                      {formatCount(postData.comments) || "57"}
+                    </span>
+                  </div>
+                )}
+              </div>
               
               {!postData.hideShare && (
-                <div className="flex items-center space-x-1">
-                  <ShareIcon className="w-4 h-4" />
-                  <span>Share</span>
+                <div className="flex items-center gap-[calc(4px*var(--scaling))] text-[#5C6C74]">
+                  <ShareIcon className="size-[calc(16px*var(--scaling))]" />
+                  <span className="text-[calc(12px*var(--scaling))] font-semibold">Share</span>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </Card>
+      </div>
+
+      {/* Suggest Feature Button */}
+      <div className="flex justify-center p-3">
+        <Button variant="outline" className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500">
+          <Lightbulb className="size-4" />
+          Suggest a feature
+        </Button>
+      </div>
     </div>
   );
 };
