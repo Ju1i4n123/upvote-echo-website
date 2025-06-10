@@ -49,32 +49,30 @@ export const RedditStoryPreview = ({ postData }: RedditStoryPreviewProps) => {
         </Button>
       </div>
 
-      {/* Middle third of 2:3 ratio container */}
+      {/* 9:16 Video Container with Reddit Overlay */}
       <div className="grid flex-1 place-items-center py-12">
         <div 
           id="reddit-story-preview"
-          className="relative w-[400px] h-[400px] max-w-[calc(400px*var(--scaling))] max-h-[calc(400px*var(--scaling))] [--scaling:0.8] max-sm:[--scaling:0.5] bg-black rounded-lg overflow-hidden shadow-lg"
+          className="relative w-[360px] h-[640px] max-w-[calc(360px*var(--scaling))] max-h-[calc(640px*var(--scaling))] [--scaling:0.8] max-sm:[--scaling:0.5] bg-black rounded-lg overflow-hidden shadow-lg"
         >
-          {/* YouTube Video Background - 2:3 ratio positioned to show middle third */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute w-full h-[300%] -top-[100%]">
-              <iframe
-                src="https://www.youtube.com/embed/xKRNDalWE-E?autoplay=1&mute=1&loop=1&playlist=xKRNDalWE-E&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
-                title="YouTube video background"
-                className="w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+          {/* YouTube Video Background - 9:16 format */}
+          <div className="absolute inset-0">
+            <iframe
+              src="https://www.youtube.com/embed/xKRNDalWE-E?autoplay=1&mute=1&loop=1&playlist=xKRNDalWE-E&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
+              title="YouTube video background"
+              className="w-full h-full"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
 
           {/* Reddit Post Overlay - Positioned in center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div 
-              className={`flex max-w-[calc(350px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 ${
+              className={`flex max-w-[calc(320px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 ${
                 postData.darkMode ? 'bg-[#0e1113] text-white' : 'bg-white'
-              } ${postData.wideLayout ? 'max-w-[calc(400px*var(--scaling))]' : ''}`}
+              } ${postData.wideLayout ? 'max-w-[calc(350px*var(--scaling))]' : ''}`}
               style={{ fontFeatureSettings: 'normal' }}
             >
               {/* User Info */}
