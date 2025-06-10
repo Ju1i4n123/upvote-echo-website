@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { PostForm } from "@/components/PostForm";
 import { RedditStoryPreview } from "@/components/RedditStoryPreview";
+import { AudioStoryForm } from "@/components/AudioStoryForm";
 import { PostData } from "@/pages/Index";
 
 const RedditStory = () => {
@@ -23,6 +24,33 @@ const RedditStory = () => {
     hideShare: false,
   });
 
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+
+  const handleAudioGenerated = (url: string) => {
+    setAudioUrl(url);
+  };
+
+  const handlePlayAudio = () => {
+    if (!audioUrl) return;
+
+    if (currentAudio) {
+      currentAudio.pause();
+      setCurrentAudio(null);
+    }
+
+    const audio = new Audio(audioUrl);
+    audio.onended = () => {
+      setIsPlayingAudio(false);
+      setCurrentAudio(null);
+    };
+    
+    audio.play();
+    setCurrentAudio(audio);
+    setIsPlayingAudio(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -35,8 +63,15 @@ const RedditStory = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-          <PostForm postData={postData} setPostData={setPostData} />
-          <RedditStoryPreview postData={postData} />
+          <div className="space-y-6">
+            <PostForm postData={postData} setPostData={setPostData} />
+            <AudioStoryForm onAudioGenerated={handleAudioGenerated} />
+          </div>
+          <RedditStoryPreview 
+            postData={postData} 
+            onPlayAudio={audioUrl ? handlePlayAudio : undefined}
+            isPlayingAudio={isPlayingAudio}
+          />
         </div>
       </div>
     </div>
