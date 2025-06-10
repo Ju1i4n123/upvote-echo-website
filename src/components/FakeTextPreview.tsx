@@ -34,9 +34,9 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
         }`} style={{ fontFeatureSettings: 'normal' }}>
           
           {/* Status Bar and Header - Combined gray section */}
-          <div className={`${
+          <div className={`relative ${
             textData.mode === "dark" ? "bg-black" : "bg-[#F6F5F6]"
-          }`}>
+          } pb-[2px]`}>
             {/* Status Bar */}
             <div className="pb-[5px] pt-[13px]">
               <div className={`flex items-center justify-between pl-[31px] pr-[25px] ${
@@ -65,7 +65,7 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
             </div>
 
             {/* Header */}
-            <div className="mt-[16px]">
+            <div className="mt-[13px] pb-[3px]">
               <div className="relative flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-[6px] size-[25px] text-[#007AFF]">
                   <path d="M7.5 11.7486C7.5 12.0987 7.62428 12.39 7.91163 12.6718L14.5496 19.1656C14.7703 19.3921 15.0397 19.5 15.36 19.5C16.0116 19.5 16.535 18.9852 16.535 18.3419C16.535 18.016 16.3962 17.7248 16.1649 17.4931L10.2632 11.7459L16.1649 6.00414C16.399 5.76971 16.535 5.47528 16.535 5.15812C16.535 4.51201 16.0116 4 15.36 4C15.0369 4 14.7703 4.10782 14.5496 4.32854L7.91163 10.8254C7.62702 11.1014 7.50274 11.3958 7.5 11.7486Z" fill="currentColor"/>
@@ -89,11 +89,12 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
                   <path d="M16.535 11.7486C16.5295 11.3958 16.402 11.1014 16.1174 10.8254L9.48535 4.32854C9.25873 4.10782 8.99214 4 8.66634 4C8.02338 4 7.5 4.51201 7.5 5.15812C7.5 5.47528 7.63016 5.76971 7.8642 6.00414L13.7659 11.7459L7.8642 17.4931C7.6329 17.7248 7.5 18.016 7.5 18.3419C7.5 18.9852 8.02338 19.5 8.66634 19.5C8.98665 19.5 9.25873 19.3921 9.48535 19.1656L16.1174 12.6718C16.4048 12.39 16.535 12.0987 16.535 11.7486Z" fill="currentColor"/>
                 </svg>
               </div>
-              {/* Separator line */}
-              <svg className="absolute inset-x-0 bottom-0" height="0.5" width="100%">
-                <line className="stroke-[#B2B2B2]" x1="0" y1="0" x2="100%" y2="0" strokeWidth="1"/>
-              </svg>
             </div>
+            
+            {/* Separator line */}
+            <svg className="absolute inset-x-0 bottom-0" height="0.5" width="100%">
+              <line className="stroke-[#B2B2B2]" x1="0" y1="0" x2="100%" y2="0" strokeWidth="1"/>
+            </svg>
           </div>
 
           {/* Messages */}
