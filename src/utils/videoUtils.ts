@@ -1,6 +1,6 @@
-
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { canvasVideoExporter } from './canvasVideoExporter';
 
 class VideoExporter {
   private ffmpeg: FFmpeg;
@@ -14,9 +14,7 @@ class VideoExporter {
     if (this.loaded) return;
     
     try {
-      // Use unpkg CDN which is more reliable for @ffmpeg/core
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-      
+      // Set up FFmpeg event handlers
       this.ffmpeg.on('log', ({ message }) => {
         console.log('FFmpeg:', message);
       });
@@ -27,47 +25,30 @@ class VideoExporter {
       
       console.log('Loading FFmpeg core...');
       
+      // Use direct CDN URLs that are known to work
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+      
       await this.ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+        coreURL: `${baseURL}/ffmpeg-core.js`,
+        wasmURL: `${baseURL}/ffmpeg-core.wasm`,
       });
       
       this.loaded = true;
       console.log('FFmpeg loaded successfully');
     } catch (error) {
       console.error('Failed to load FFmpeg:', error);
-      // Try jsdelivr as fallback
+      
+      // Try alternative loading method
       try {
-        console.log('Trying jsdelivr CDN as fallback...');
-        const altBaseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+        console.log('Trying alternative FFmpeg loading method...');
         
-        await this.ffmpeg.load({
-          coreURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-          workerURL: await toBlobURL(`${altBaseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
-        });
+        await this.ffmpeg.load();
         
         this.loaded = true;
-        console.log('FFmpeg loaded from jsdelivr CDN');
+        console.log('FFmpeg loaded with default method');
       } catch (altError) {
-        console.error('Failed to load FFmpeg from jsdelivr CDN:', altError);
-        // Try with core-st as final fallback
-        try {
-          console.log('Trying core-st as final fallback...');
-          const finalBaseURL = 'https://unpkg.com/@ffmpeg/core-st@0.12.6/dist/umd';
-          
-          await this.ffmpeg.load({
-            coreURL: await toBlobURL(`${finalBaseURL}/ffmpeg-core.js`, 'text/javascript'),
-            wasmURL: await toBlobURL(`${finalBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-          });
-          
-          this.loaded = true;
-          console.log('FFmpeg loaded from core-st');
-        } catch (finalError) {
-          console.error('All FFmpeg loading attempts failed:', finalError);
-          throw new Error('Could not load FFmpeg. Please check your internet connection and try again.');
-        }
+        console.error('Alternative FFmpeg loading failed:', altError);
+        throw new Error('Could not load FFmpeg. This feature requires a modern browser with WebAssembly support. Please try using Chrome, Firefox, or Edge.');
       }
     }
   }
@@ -110,86 +91,7 @@ class VideoExporter {
       
       await this.load();
       
-      const canvas = document.createElement('canvas');
-      canvas.width = 540;
-      canvas.height = 960;
-      const ctx = canvas.getContext('2d')!;
-      
-      const frames: string[] = [];
-      const fps = 30;
-      const totalFrames = duration * fps;
-      
-      // Theme colors based on video type
-      const themes = {
-        minecraft: {
-          colors: ['#8B4513', '#228B22', '#4169E1', '#32CD32'],
-          name: 'Minecraft'
-        },
-        'subway-surfers': {
-          colors: ['#FF6B35', '#F7931E', '#FFD23F', '#06FFA5'],
-          name: 'Subway Surfers'
-        }
-      };
-      
-      const theme = themes[videoType];
-      
-      for (let i = 0; i < totalFrames; i++) {
-        const time = i / fps;
-        
-        // Create themed gradient
-        const gradient = ctx.createLinearGradient(
-          0, 
-          Math.sin(time * 0.5) * 200 + 480, 
-          540, 
-          Math.cos(time * 0.3) * 200 + 480
-        );
-        
-        const colorIndex = Math.floor(time * 2) % theme.colors.length;
-        const nextColorIndex = (colorIndex + 1) % theme.colors.length;
-        
-        gradient.addColorStop(0, theme.colors[colorIndex]);
-        gradient.addColorStop(0.5, theme.colors[nextColorIndex]);
-        gradient.addColorStop(1, theme.colors[(colorIndex + 2) % theme.colors.length]);
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 540, 960);
-        
-        // Add themed elements
-        if (videoType === 'minecraft') {
-          // Add block-like shapes
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-          for (let j = 0; j < 6; j++) {
-            const x = (j % 3) * 180 + Math.sin(time + j) * 50;
-            const y = Math.floor(j / 3) * 400 + 200 + Math.cos(time * 0.5 + j) * 100;
-            const size = 60 + Math.sin(time * 2 + j) * 20;
-            ctx.fillRect(x - size/2, y - size/2, size, size);
-          }
-        } else {
-          // Add rail-like lines and moving elements for subway surfers
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-          ctx.lineWidth = 8;
-          for (let j = 0; j < 3; j++) {
-            const x = 135 + j * 135;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, 960);
-            ctx.stroke();
-          }
-          
-          // Add moving circles
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-          for (let j = 0; j < 5; j++) {
-            const x = 270 + Math.sin(time * 3 + j * 1.2) * 200;
-            const y = ((time * 200 + j * 200) % 1200) - 120;
-            const size = 30 + Math.sin(time * 4 + j) * 10;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        
-        frames.push(canvas.toDataURL('image/png'));
-      }
+      const frames = canvasVideoExporter.createBackgroundFrames(videoType, duration);
       
       // Clear any existing files
       try {
@@ -219,6 +121,7 @@ class VideoExporter {
       
       console.log('Creating video from frames...');
       
+      const fps = 30;
       await this.ffmpeg.exec([
         '-framerate', fps.toString(),
         '-i', 'frame%06d.png',
