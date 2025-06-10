@@ -11,14 +11,15 @@ import { videoExporter } from "@/utils/videoUtils";
 
 interface VideoExportControlsProps {
   elementId: string;
+  selectedVideo: 'minecraft' | 'subway-surfers';
+  onVideoChange: (video: 'minecraft' | 'subway-surfers') => void;
 }
 
-export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => {
+export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }: VideoExportControlsProps) => {
   const [totalDuration, setTotalDuration] = useState([10]);
   const [overlayStartTime, setOverlayStartTime] = useState([2]);
   const [overlayDuration, setOverlayDuration] = useState([6]);
   const [exitAnimation, setExitAnimation] = useState<'none' | 'fade' | 'slide'>('fade');
-  const [selectedVideo, setSelectedVideo] = useState<'minecraft' | 'subway-surfers'>('minecraft');
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
@@ -75,7 +76,7 @@ export const VideoExportControls = ({ elementId }: VideoExportControlsProps) => 
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label>Background Video</Label>
-          <Select value={selectedVideo} onValueChange={(value: 'minecraft' | 'subway-surfers') => setSelectedVideo(value)}>
+          <Select value={selectedVideo} onValueChange={onVideoChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select background video" />
             </SelectTrigger>

@@ -13,10 +13,20 @@ interface RedditStoryPreviewProps {
   postData: PostData;
   onPlayAudio?: () => void;
   isPlayingAudio?: boolean;
+  selectedVideo?: 'minecraft' | 'subway-surfers';
 }
 
-export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio }: RedditStoryPreviewProps) => {
+export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, selectedVideo = 'minecraft' }: RedditStoryPreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const videoOptions = {
+    minecraft: {
+      embedUrl: "https://player.vimeo.com/video/1092266536?h=7a17cf4cf9&autoplay=1&loop=1&muted=1&background=1"
+    },
+    'subway-surfers': {
+      embedUrl: "https://player.vimeo.com/video/1092266136?h=db7b597083&autoplay=1&loop=1&muted=1&background=1"
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -26,7 +36,7 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio }: Re
     canvas.width = 540;
     canvas.height = 960;
 
-    // Create animated background
+    // Create animated background as fallback
     const animate = () => {
       const time = Date.now() * 0.001;
       
@@ -107,10 +117,20 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio }: Re
           id="reddit-story-preview"
           className="relative w-[540px] h-[960px] max-w-[calc(540px*var(--scaling))] max-h-[calc(960px*var(--scaling))] [--scaling:0.7] max-sm:[--scaling:0.4] bg-black rounded-lg overflow-hidden shadow-lg"
         >
-          {/* Animated Canvas Background - 9:16 format */}
+          {/* Vimeo Video Background - 9:16 format */}
+          <iframe
+            src={videoOptions[selectedVideo].embedUrl}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            frameBorder="0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title={`${selectedVideo} background video`}
+          />
+
+          {/* Animated Canvas Fallback - only shows if iframe fails */}
           <canvas
             ref={canvasRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover -z-10"
           />
 
           {/* Reddit Post Overlay - Positioned in center */}

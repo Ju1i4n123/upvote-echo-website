@@ -28,6 +28,7 @@ const RedditStory = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<'minecraft' | 'subway-surfers'>('minecraft');
 
   const handleAudioGenerated = (url: string) => {
     setAudioUrl(url);
@@ -67,12 +68,17 @@ const RedditStory = () => {
           <div className="space-y-6">
             <PostForm postData={postData} setPostData={setPostData} />
             <AudioStoryForm onAudioGenerated={handleAudioGenerated} />
-            <VideoExportControls elementId="reddit-story-preview" />
+            <VideoExportControls 
+              elementId="reddit-story-preview" 
+              selectedVideo={selectedVideo}
+              onVideoChange={setSelectedVideo}
+            />
           </div>
           <RedditStoryPreview 
             postData={postData} 
             onPlayAudio={audioUrl ? handlePlayAudio : undefined}
             isPlayingAudio={isPlayingAudio}
+            selectedVideo={selectedVideo}
           />
         </div>
       </div>
