@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export const Header = ({ textData }: HeaderProps) => {
   return (
-    <div className="mt-[13px] pb-[3px]">
+    <div className="mt-[13px] pb-[3px] font-sf-pro">
       <div className="relative flex items-center justify-center">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-[6px] size-[25px] text-[#007AFF]">
           <path d="M7.5 11.7486C7.5 12.0987 7.62428 12.39 7.91163 12.6718L14.5496 19.1656C14.7703 19.3921 15.0397 19.5 15.36 19.5C16.0116 19.5 16.535 18.9852 16.535 18.3419C16.535 18.016 16.3962 17.7248 16.1649 17.4931L10.2632 11.7459L16.1649 6.00414C16.399 5.76971 16.535 5.47528 16.535 5.15812C16.535 4.51201 16.0116 4 15.36 4C15.0369 4 14.7703 4.10782 14.5496 4.32854L7.91163 10.8254C7.62702 11.1014 7.50274 11.3958 7.5 11.7486Z" fill="currentColor"/>
@@ -21,7 +21,7 @@ export const Header = ({ textData }: HeaderProps) => {
             />
           ) : (
             <div className="flex size-full items-center justify-center bg-gradient-to-b from-[#A5ABB9] to-[#858994] text-center">
-              <span className="text-[18px] font-semibold text-white">
+              <span className="text-[18px] font-semibold text-white font-sf-pro">
                 {textData.recipientName ? textData.recipientName.charAt(0).toUpperCase() : "P"}
               </span>
             </div>
@@ -32,7 +32,7 @@ export const Header = ({ textData }: HeaderProps) => {
         </svg>
       </div>
       <div className={`mx-auto mt-[2.5px] flex max-w-[65%] items-center justify-center overflow-hidden`}>
-        <span className={`truncate text-[9px] ${textData.mode === "dark" ? "text-white" : "text-black"}`}>
+        <span className={`truncate text-[9px] font-sf-pro ${textData.mode === "dark" ? "text-white" : "text-black"}`}>
           {textData.recipientName || "Postfully"}
         </span>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-[9px] text-[#C1C1C3]">

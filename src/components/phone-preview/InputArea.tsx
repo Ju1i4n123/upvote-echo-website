@@ -7,7 +7,7 @@ interface InputAreaProps {
 
 export const InputArea = ({ textData }: InputAreaProps) => {
   return (
-    <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-col ${
+    <div className={`absolute inset-x-0 bottom-0 z-10 flex flex-col font-sf-pro ${
       textData.mode === "dark" ? "bg-[#26252a]" : "bg-[#FCFCFC]"
     }`}>
       <div className="mb-[23px] flex items-center gap-[10px] px-[11px] pt-[4px]">
@@ -17,7 +17,7 @@ export const InputArea = ({ textData }: InputAreaProps) => {
           </svg>
         </div>
         <div className="flex flex-1 items-center overflow-hidden rounded-full border px-[10px] py-[4.5px] border-[#DEDEDE] bg-white">
-          <span className="flex-1 truncate text-[13px] text-[#C1C2C4]">
+          <span className="flex-1 truncate text-[13px] text-[#C1C2C4] font-sf-pro">
             {textData.messageInput || "Postfully.app"}
           </span>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-[16px] text-[#ACB4B7]">

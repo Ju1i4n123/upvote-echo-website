@@ -7,7 +7,7 @@ interface MessageBubbleProps {
 
 export const MessageBubble = ({ message, sender, mode }: MessageBubbleProps) => {
   return (
-    <div className="flex flex-col gap-[2px] pb-[6px]">
+    <div className="flex flex-col gap-[2px] pb-[6px] font-sf-pro">
       <div className={`flex flex-col gap-[2px] ${sender === "sender" ? "items-end" : "items-start"}`}>
         <div className="flex items-center gap-[6px]">
           <div className={`relative flex max-w-[198px] break-words rounded-[14px] px-[10px] py-[6px] ${
@@ -15,7 +15,7 @@ export const MessageBubble = ({ message, sender, mode }: MessageBubbleProps) => 
               ? "bg-[#007AFF]" 
               : mode === "dark" ? "bg-[#26252a]" : "bg-[#E9E9EB]"
           }`}>
-            <span className={`w-full whitespace-pre-wrap text-[13px]/4 ${
+            <span className={`w-full whitespace-pre-wrap text-[13px]/4 font-sf-pro ${
               sender === "sender" 
                 ? "text-white" 
                 : mode === "dark" ? "text-white" : "text-black"

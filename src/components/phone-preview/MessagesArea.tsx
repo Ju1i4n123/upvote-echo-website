@@ -8,11 +8,11 @@ interface MessagesAreaProps {
 
 export const MessagesArea = ({ textData }: MessagesAreaProps) => {
   return (
-    <div className={`no-scrollbar relative flex flex-1 flex-col overflow-auto px-[11px] pb-[81px] pt-[15px] ${
+    <div className={`no-scrollbar relative flex flex-1 flex-col overflow-auto px-[11px] pb-[81px] pt-[15px] font-sf-pro ${
       textData.mode === "dark" ? "bg-[#000000]" : "bg-white"
     }`}>
       <div className="flex justify-center pb-[6px] pt-[11px] text-center">
-        <span className="text-[9px] font-medium text-[#8A898E]">Today 11:32 AM</span>
+        <span className="text-[9px] font-medium text-[#8A898E] font-sf-pro">Today 11:32 AM</span>
       </div>
       
       {/* Default messages */}
