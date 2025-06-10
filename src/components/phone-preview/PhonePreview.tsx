@@ -11,9 +11,13 @@ interface PhonePreviewProps {
 
 export const PhonePreview = ({ textData }: PhonePreviewProps) => {
   return (
-    <div className={`relative flex h-[682px] w-[314px] flex-col font-sf-pro max-sm:scale-80 overflow-hidden rounded-2xl border border-gray-100 shadow-lg ${
+    <div className={`relative flex h-[682px] w-[314px] flex-col max-sm:scale-80 overflow-hidden rounded-2xl border border-gray-100 shadow-lg ${
       textData.mode === "dark" ? "bg-black" : "bg-white"
-    }`} style={{ fontFeatureSettings: 'normal' }}>
+    }`} style={{ 
+      fontFeatureSettings: 'normal',
+      WebkitFontSmoothing: 'antialiased',
+      MozOsxFontSmoothing: 'grayscale'
+    }}>
       
       {/* Status Bar and Header - Combined gray section */}
       <div className={`relative ${
