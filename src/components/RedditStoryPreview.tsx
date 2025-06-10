@@ -53,7 +53,7 @@ export const RedditStoryPreview = ({ postData }: RedditStoryPreviewProps) => {
       <div className="grid flex-1 place-items-center py-12">
         <div 
           id="reddit-story-preview"
-          className="relative w-[360px] h-[640px] max-w-[calc(360px*var(--scaling))] max-h-[calc(640px*var(--scaling))] [--scaling:0.8] max-sm:[--scaling:0.5] bg-black rounded-lg overflow-hidden shadow-lg"
+          className="relative w-[450px] h-[800px] max-w-[calc(450px*var(--scaling))] max-h-[calc(800px*var(--scaling))] [--scaling:0.8] max-sm:[--scaling:0.5] bg-black rounded-lg overflow-hidden shadow-lg"
         >
           {/* YouTube Video Background - 9:16 format */}
           <div className="absolute inset-0">
@@ -70,9 +70,9 @@ export const RedditStoryPreview = ({ postData }: RedditStoryPreviewProps) => {
           {/* Reddit Post Overlay - Positioned in center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div 
-              className={`flex max-w-[calc(320px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 ${
+              className={`flex max-w-[calc(400px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 ${
                 postData.darkMode ? 'bg-[#0e1113] text-white' : 'bg-white'
-              } ${postData.wideLayout ? 'max-w-[calc(350px*var(--scaling))]' : ''}`}
+              } ${postData.wideLayout ? 'max-w-[calc(430px*var(--scaling))]' : ''}`}
               style={{ fontFeatureSettings: 'normal' }}
             >
               {/* User Info */}
