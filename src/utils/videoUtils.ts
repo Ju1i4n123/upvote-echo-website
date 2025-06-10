@@ -1,3 +1,4 @@
+
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
@@ -350,5 +351,3 @@ class VideoExporter {
 }
 
 export const videoExporter = new VideoExporter();
-
-}
