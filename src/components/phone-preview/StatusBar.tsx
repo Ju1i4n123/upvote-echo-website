@@ -18,7 +18,7 @@ export const StatusBar = ({ textData }: StatusBarProps) => {
       <div className={`flex items-center justify-between pl-[31px] pr-[25px] ${
         textData.mode === "dark" ? "text-white" : "text-black"
       }`}>
-        <span className="text-[14px]" style={{ fontWeight: 500 }}>{formatTime(textData.deviceTime)}</span>
+        <span className="text-[14px]" style={{ fontWeight: 550 }}>{formatTime(textData.deviceTime)}</span>
         <div className="flex items-center gap-[5px]">
           {/* Signal, WiFi, Battery icons */}
           <svg viewBox="0 0 27 17" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-[10px]">
