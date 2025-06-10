@@ -217,5 +217,3 @@ export const FakeTextPreview = ({ textData }: FakeTextPreviewProps) => {
     </div>
   );
 };
-
-</edits_to_apply>
