@@ -31,8 +31,12 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
       
       <Card className={`p-4 ${postData.darkMode ? 'bg-gray-900 text-white' : 'bg-white'} ${postData.wideLayout ? 'max-w-2xl' : 'max-w-md'} mx-auto`}>
         <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-            {postData.avatar || "🤖"}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+            <img 
+              src="/lovable-uploads/36c19aa4-e4d2-4e24-bb53-2a8eb94e5a5e.png" 
+              alt="Reddit Avatar" 
+              className="w-full h-full object-cover"
+            />
           </div>
           
           <div className="flex-1 min-w-0">
@@ -42,17 +46,12 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
                 <VerifiedIcon className="w-3 h-3" />
               )}
               {!postData.hideTrophies && (
-                <div className="flex space-x-1">
-                  <span>🏆</span>
-                  <span>⭐</span>
-                  <span>🥇</span>
-                  <span>🎖️</span>
-                  <span>🥈</span>
-                  <span>🥉</span>
-                  <span>⚡</span>
-                  <span>🏅</span>
-                  <span>🎗️</span>
-                  <span>🎭</span>
+                <div className="flex items-center">
+                  <img 
+                    src="/lovable-uploads/7d0adf6f-a83d-42da-9453-9d8ba8d018c9.png" 
+                    alt="Trophies" 
+                    className="h-4"
+                  />
                 </div>
               )}
             </div>
