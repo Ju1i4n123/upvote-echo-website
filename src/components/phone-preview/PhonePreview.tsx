@@ -22,7 +22,7 @@ export const PhonePreview = ({ textData }: PhonePreviewProps) => {
         <StatusBar textData={textData} />
         
         {/* Separator line between status bar and header - moved 75px down */}
-        <svg className="absolute inset-x-0 z-10" height="0.5" width="100%" style={{ top: '119px' }}>
+        <svg className="absolute inset-x-0 z-10" height="0.5" width="100%" style={{ top: '110px' }}>
           <line className="stroke-[#B2B2B2]" x1="0" y1="0" x2="100%" y2="0" strokeWidth="1"/>
         </svg>
 
