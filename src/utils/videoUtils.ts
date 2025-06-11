@@ -1,258 +1,146 @@
 import html2canvas from 'html2canvas';
 
 class VideoExporter {
-  private mediaRecorder: MediaRecorder | null = null;
-  private recordedChunks: Blob[] = [];
+  private videoCache: Map<string, HTMLVideoElement> = new Map();
 
-  async captureScreenRecording(
-    elementId: string,
-    duration: number,
-    options: {
-      overlayStartTime: number;
-      overlayDuration: number;
-      exitAnimation: 'none' | 'fade' | 'slide';
-      showRedditOverlay: boolean;
-      disappearAfterTime: boolean;
-    }
-  ): Promise<Blob> {
-    const element = document.getElementById(elementId);
-    if (!element) throw new Error('Element not found');
+  // Direct video URLs (you would need to host these or find publicly accessible ones)
+  private videoSources = {
+    'minecraft': '/videos/minecraft-background.mp4', // You'd need to add this to your public folder
+    'subway-surfers': '/videos/subway-surfers-background.mp4', // You'd need to add this to your public folder
+    // Alternative: Use public CDN URLs if available
+    // 'minecraft': 'https://example-cdn.com/minecraft-gameplay.mp4',
+  };
 
-    try {
-      // Try to use screen capture API
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          width: 1920,
-          height: 1080,
-          frameRate: 30,
-        },
-        audio: false
-      });
-
-      return new Promise((resolve, reject) => {
-        this.recordedChunks = [];
-        
-        this.mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm;codecs=vp8,opus'
-        });
-
-        this.mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            this.recordedChunks.push(event.data);
-          }
-        };
-
-        this.mediaRecorder.onstop = () => {
-          const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
-          stream.getTracks().forEach(track => track.stop());
-          resolve(blob);
-        };
-
-        this.mediaRecorder.onerror = (error) => {
-          stream.getTracks().forEach(track => track.stop());
-          reject(error);
-        };
-
-        // Handle overlay visibility
-        const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
-        
-        if (redditOverlay && options.showRedditOverlay) {
-          // Initially hide the overlay
-          redditOverlay.style.opacity = '0';
-          redditOverlay.style.transform = 'scale(0.9)';
-          redditOverlay.style.transition = 'all 0.5s ease-in-out';
-
-          // Show overlay at the specified time
-          setTimeout(() => {
-            redditOverlay.style.opacity = '1';
-            redditOverlay.style.transform = 'scale(1)';
-            
-            if (options.disappearAfterTime) {
-              // Hide overlay after duration
-              setTimeout(() => {
-                if (options.exitAnimation === 'fade') {
-                  redditOverlay.style.transition = 'opacity 1s ease-out';
-                  redditOverlay.style.opacity = '0';
-                } else if (options.exitAnimation === 'slide') {
-                  redditOverlay.style.transition = 'transform 1s ease-out';
-                  redditOverlay.style.transform = 'translateX(-100%)';
-                } else {
-                  redditOverlay.style.display = 'none';
-                }
-              }, options.overlayDuration * 1000);
-            }
-          }, options.overlayStartTime * 1000);
-        } else if (!options.showRedditOverlay && redditOverlay) {
-          redditOverlay.style.display = 'none';
-        }
-
-        // Start recording
-        this.mediaRecorder.start();
-
-        // Stop after duration
-        setTimeout(() => {
-          if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            this.mediaRecorder.stop();
-          }
-        }, duration * 1000);
-      });
-    } catch (error) {
-      console.error('Screen capture failed:', error);
-      throw new Error('Screen recording failed. Please ensure you allow screen sharing when prompted.');
-    }
-  }
-
-  async captureWithCanvas(
-    elementId: string,
-    videoType: 'minecraft' | 'subway-surfers',
-    duration: number,
-    options: {
-      overlayStartTime: number;
-      overlayDuration: number;
-      exitAnimation: 'none' | 'fade' | 'slide';
-      showRedditOverlay: boolean;
-      disappearAfterTime: boolean;
-    }
-  ): Promise<Blob> {
-    const element = document.getElementById(elementId);
-    if (!element) throw new Error('Element not found');
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 540;
-    canvas.height = 960;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-    
-    const frames: string[] = [];
-    const fps = 30;
-    const totalFrames = duration * fps;
-
-    // Capture the Reddit overlay if needed
-    let overlayCanvas: HTMLCanvasElement | null = null;
-    if (options.showRedditOverlay) {
-      const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
-      if (redditOverlay) {
-        overlayCanvas = await html2canvas(redditOverlay, {
-          width: 540,
-          height: 960,
-          backgroundColor: null,
-          scale: 1,
-        });
-      }
+  private async loadVideo(videoType: 'minecraft' | 'subway-surfers'): Promise<HTMLVideoElement> {
+    if (this.videoCache.has(videoType)) {
+      return this.videoCache.get(videoType)!;
     }
 
-    // Create frames
-    for (let i = 0; i < totalFrames; i++) {
-      const time = i / fps;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, 540, 960);
-
-      // Try to capture the actual iframe content
-      const iframe = element.querySelector('iframe') as HTMLIFrameElement;
-      if (iframe) {
-        // Create a message to indicate we're simulating the video
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 540, 960);
-        
-        ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${videoType === 'minecraft' ? 'Minecraft' : 'Subway Surfers'} Background`, 270, 480);
-        ctx.font = '16px Arial';
-        ctx.fillText('(Actual video cannot be captured due to browser restrictions)', 270, 520);
-        ctx.fillText('Use screen recording for best results', 270, 550);
-      }
-
-      // Add overlay if needed
-      if (overlayCanvas && options.showRedditOverlay) {
-        const overlayVisible = time >= options.overlayStartTime && 
-          (!options.disappearAfterTime || time <= options.overlayStartTime + options.overlayDuration);
-        
-        if (overlayVisible) {
-          let alpha = 1;
-          
-          // Handle fade animations
-          if (time < options.overlayStartTime + 0.5) {
-            // Fade in
-            alpha = (time - options.overlayStartTime) / 0.5;
-          } else if (options.disappearAfterTime && options.exitAnimation === 'fade' && 
-                     time > options.overlayStartTime + options.overlayDuration - 1) {
-            // Fade out
-            alpha = 1 - (time - (options.overlayStartTime + options.overlayDuration - 1));
-          }
-          
-          ctx.globalAlpha = alpha;
-          
-          // Handle slide animation
-          let xOffset = 0;
-          if (options.disappearAfterTime && options.exitAnimation === 'slide' && 
-              time > options.overlayStartTime + options.overlayDuration - 1) {
-            const slideProgress = time - (options.overlayStartTime + options.overlayDuration - 1);
-            xOffset = -540 * slideProgress;
-          }
-          
-          ctx.drawImage(overlayCanvas, xOffset, 0);
-          ctx.globalAlpha = 1;
-        }
-      }
-
-      frames.push(canvas.toDataURL('image/jpeg', 0.9));
-    }
-
-    // Convert frames to video blob
-    return this.framesToVideo(frames, fps);
-  }
-
-  private async framesToVideo(frames: string[], fps: number): Promise<Blob> {
-    // Create a canvas for the video
-    const canvas = document.createElement('canvas');
-    canvas.width = 540;
-    canvas.height = 960;
-    const ctx = canvas.getContext('2d')!;
-
-    // Create a MediaRecorder for the canvas
-    const stream = canvas.captureStream(fps);
-    const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp8',
-      videoBitsPerSecond: 2500000
-    });
-
-    const chunks: Blob[] = [];
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous'; // Important for canvas access
+    video.muted = true;
+    video.loop = true;
     
     return new Promise((resolve, reject) => {
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunks.push(e.data);
-        }
+      video.onloadeddata = () => {
+        this.videoCache.set(videoType, video);
+        resolve(video);
       };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        resolve(blob);
+      
+      video.onerror = () => {
+        console.error(`Failed to load video: ${videoType}`);
+        reject(new Error(`Failed to load video: ${videoType}`));
       };
-
-      mediaRecorder.onerror = reject;
-
-      mediaRecorder.start();
-
-      // Play frames
-      let frameIndex = 0;
-      const playFrame = () => {
-        if (frameIndex < frames.length) {
-          const img = new Image();
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0);
-            frameIndex++;
-            setTimeout(playFrame, 1000 / fps);
-          };
-          img.src = frames[frameIndex];
-        } else {
-          mediaRecorder.stop();
-        }
-      };
-
-      playFrame();
+      
+      // Try to load from video source
+      if (this.videoSources[videoType]) {
+        video.src = this.videoSources[videoType];
+      } else {
+        reject(new Error(`No video source for: ${videoType}`));
+      }
     });
+  }
+
+  private async createAnimatedBackground(
+    ctx: CanvasRenderingContext2D,
+    videoType: 'minecraft' | 'subway-surfers',
+    frame: number,
+    width: number,
+    height: number
+  ) {
+    // Create animated backgrounds as fallback
+    if (videoType === 'minecraft') {
+      // Minecraft-style background
+      const blockSize = 40;
+      const time = frame / 30;
+      
+      // Sky gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#87CEEB');
+      gradient.addColorStop(1, '#98D8E8');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Animated grass blocks
+      ctx.fillStyle = '#7CFC00';
+      for (let x = 0; x < width; x += blockSize) {
+        const yOffset = Math.sin((x + time * 50) / 100) * 20;
+        ctx.fillRect(x, height - 200 + yOffset, blockSize - 2, blockSize - 2);
+      }
+      
+      // Dirt blocks
+      ctx.fillStyle = '#8B4513';
+      for (let y = height - 160; y < height; y += blockSize) {
+        for (let x = 0; x < width; x += blockSize) {
+          ctx.fillRect(x, y, blockSize - 2, blockSize - 2);
+        }
+      }
+      
+      // Moving clouds
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      for (let i = 0; i < 3; i++) {
+        const cloudX = ((time * 20 + i * 200) % (width + 100)) - 50;
+        const cloudY = 50 + i * 60;
+        // Simple cloud shape
+        ctx.beginPath();
+        ctx.arc(cloudX, cloudY, 30, 0, Math.PI * 2);
+        ctx.arc(cloudX + 25, cloudY, 35, 0, Math.PI * 2);
+        ctx.arc(cloudX + 50, cloudY, 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+    } else if (videoType === 'subway-surfers') {
+      // Subway Surfers-style background
+      const time = frame / 30;
+      
+      // Gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#FF6B6B');
+      gradient.addColorStop(0.5, '#4ECDC4');
+      gradient.addColorStop(1, '#45B7D1');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Moving subway tracks
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 4;
+      
+      // Three lanes
+      const laneWidth = width / 3;
+      for (let lane = 0; lane < 3; lane++) {
+        const x = laneWidth * lane + laneWidth / 2;
+        
+        // Track lines
+        ctx.beginPath();
+        ctx.moveTo(x - 20, 0);
+        ctx.lineTo(x - 10, height);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(x + 20, 0);
+        ctx.lineTo(x + 10, height);
+        ctx.stroke();
+        
+        // Moving dashes
+        ctx.setLineDash([20, 30]);
+        ctx.beginPath();
+        ctx.moveTo(x, -time * 100 % 50);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      // Animated obstacles
+      const obstacleY = ((time * 200) % (height + 100)) - 50;
+      ctx.fillStyle = '#FFD93D';
+      ctx.fillRect(width / 2 - 30, obstacleY, 60, 80);
+      
+      // Score effect
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('SCORE: ' + Math.floor(time * 1000), width / 2, 40);
+    }
   }
 
   async exportVideo(
@@ -267,119 +155,182 @@ class VideoExporter {
       disappearAfterTime: boolean;
     }
   ): Promise<void> {
+    const element = document.getElementById(elementId);
+    if (!element) throw new Error('Element not found');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 540;
+    canvas.height = 960;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    
+    const fps = 30;
+    const totalFrames = options.totalDuration * fps;
+    
+    // Try to load actual video
+    let backgroundVideo: HTMLVideoElement | null = null;
+    let useAnimatedBackground = false;
+    
     try {
-      console.log('Starting video export...');
-      
-      let videoBlob: Blob;
-      
-      // First, try screen recording
-      try {
-        // Show a notification to the user
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: #333;
-          color: white;
-          padding: 20px;
-          border-radius: 8px;
-          z-index: 10000;
-          text-align: center;
-          font-family: Arial, sans-serif;
-        `;
-        notification.innerHTML = `
-          <h3 style="margin: 0 0 10px 0;">Screen Recording Required</h3>
-          <p style="margin: 0 0 15px 0;">To capture the Vimeo video, please select the browser tab showing this page when prompted.</p>
-          <p style="margin: 0; font-size: 14px; opacity: 0.8;">The recording will start automatically after you share your screen.</p>
-        `;
-        document.body.appendChild(notification);
+      backgroundVideo = await this.loadVideo(options.backgroundVideo);
+      backgroundVideo.currentTime = 0;
+      await backgroundVideo.play();
+    } catch (error) {
+      console.log('Using animated background as fallback');
+      useAnimatedBackground = true;
+    }
 
-        // Wait a moment for user to read
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        notification.remove();
-
-        videoBlob = await this.captureScreenRecording(elementId, options.totalDuration, options);
-        console.log('Screen recording captured successfully');
-      } catch (screenError) {
-        console.error('Screen recording failed, falling back to canvas capture:', screenError);
+    // Capture Reddit overlay
+    let overlayCanvas: HTMLCanvasElement | null = null;
+    if (options.showRedditOverlay) {
+      const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
+      if (redditOverlay) {
+        // Make sure overlay is visible for capture
+        const originalDisplay = redditOverlay.style.display;
+        const originalOpacity = redditOverlay.style.opacity;
+        redditOverlay.style.display = 'block';
+        redditOverlay.style.opacity = '1';
         
-        // Show fallback notification
-        const fallbackNotification = document.createElement('div');
-        fallbackNotification.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: #ff6b6b;
-          color: white;
-          padding: 20px;
-          border-radius: 8px;
-          z-index: 10000;
-          text-align: center;
-          font-family: Arial, sans-serif;
-        `;
-        fallbackNotification.innerHTML = `
-          <h3 style="margin: 0 0 10px 0;">Screen Recording Failed</h3>
-          <p style="margin: 0;">Due to browser restrictions, the actual Vimeo video cannot be captured.</p>
-          <p style="margin: 10px 0 0 0; font-size: 14px;">Creating a preview video with placeholder background...</p>
-        `;
-        document.body.appendChild(fallbackNotification);
+        overlayCanvas = await html2canvas(redditOverlay, {
+          width: 540,
+          height: 960,
+          backgroundColor: null,
+          scale: 1,
+        });
         
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        fallbackNotification.remove();
+        // Restore original state
+        redditOverlay.style.display = originalDisplay;
+        redditOverlay.style.opacity = originalOpacity;
+      }
+    }
 
-        videoBlob = await this.captureWithCanvas(elementId, options.backgroundVideo, options.totalDuration, options);
+    // Create video using MediaRecorder
+    const stream = canvas.captureStream(fps);
+    const mediaRecorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp9',
+      videoBitsPerSecond: 5000000 // 5 Mbps for better quality
+    });
+
+    const chunks: Blob[] = [];
+    
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        chunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.start();
+
+    // Render frames
+    let frameCount = 0;
+    const renderFrame = async () => {
+      if (frameCount >= totalFrames) {
+        mediaRecorder.stop();
+        return;
       }
 
-      // Download the video
-      const url = URL.createObjectURL(videoBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `reddit-story-${options.backgroundVideo}-${new Date().getTime()}.webm`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const currentTime = frameCount / fps;
       
-      console.log('Video exported successfully');
-    } catch (error) {
-      console.error('Error exporting video:', error);
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Show error notification
-      const errorNotification = document.createElement('div');
-      errorNotification.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #ff4444;
-        color: white;
-        padding: 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        text-align: center;
-        font-family: Arial, sans-serif;
-      `;
-      errorNotification.innerHTML = `
-        <h3 style="margin: 0 0 10px 0;">Export Failed</h3>
-        <p style="margin: 0;">${error instanceof Error ? error.message : 'Unknown error occurred'}</p>
-        <button onclick="this.parentElement.remove()" style="
-          margin-top: 15px;
-          padding: 8px 16px;
-          background: white;
-          color: #ff4444;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-weight: bold;
-        ">Close</button>
-      `;
-      document.body.appendChild(errorNotification);
+      // Draw background
+      if (backgroundVideo && !useAnimatedBackground) {
+        // Set video time for smooth playback
+        backgroundVideo.currentTime = currentTime % backgroundVideo.duration;
+        
+        // Draw video frame
+        ctx.drawImage(backgroundVideo, 0, 0, canvas.width, canvas.height);
+      } else {
+        // Use animated background
+        await this.createAnimatedBackground(ctx, options.backgroundVideo, frameCount, canvas.width, canvas.height);
+      }
       
-      throw error;
-    }
+      // Draw Reddit overlay if needed
+      if (overlayCanvas && options.showRedditOverlay) {
+        const overlayVisible = currentTime >= options.overlayStartTime && 
+          (!options.disappearAfterTime || currentTime <= options.overlayStartTime + options.overlayDuration);
+        
+        if (overlayVisible) {
+          ctx.save();
+          
+          let alpha = 1;
+          let transform = '';
+          
+          // Calculate animation progress
+          const fadeInDuration = 0.5;
+          const fadeOutDuration = 1;
+          
+          if (currentTime < options.overlayStartTime + fadeInDuration) {
+            // Fade in
+            const progress = (currentTime - options.overlayStartTime) / fadeInDuration;
+            alpha = progress;
+            transform = `scale(${0.8 + 0.2 * progress})`;
+          } else if (options.disappearAfterTime && options.exitAnimation !== 'none') {
+            const timeUntilEnd = (options.overlayStartTime + options.overlayDuration) - currentTime;
+            
+            if (timeUntilEnd < fadeOutDuration) {
+              const progress = 1 - (timeUntilEnd / fadeOutDuration);
+              
+              if (options.exitAnimation === 'fade') {
+                alpha = 1 - progress;
+              } else if (options.exitAnimation === 'slide') {
+                ctx.translate(-canvas.width * progress, 0);
+              }
+            }
+          }
+          
+          ctx.globalAlpha = alpha;
+          
+          // Apply transform
+          if (transform) {
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            if (transform.includes('scale')) {
+              const scaleMatch = transform.match(/scale\(([\d.]+)\)/);
+              if (scaleMatch) {
+                const scale = parseFloat(scaleMatch[1]);
+                ctx.scale(scale, scale);
+              }
+            }
+            ctx.translate(-canvas.width / 2, -canvas.height / 2);
+          }
+          
+          ctx.drawImage(overlayCanvas, 0, 0);
+          ctx.restore();
+        }
+      }
+      
+      frameCount++;
+      
+      // Use requestAnimationFrame for smooth rendering
+      requestAnimationFrame(renderFrame);
+    };
+
+    // Start rendering
+    renderFrame();
+
+    // Wait for recording to complete
+    await new Promise<void>((resolve) => {
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        
+        // Download the video
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reddit-story-${options.backgroundVideo}-${new Date().getTime()}.webm`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Cleanup
+        if (backgroundVideo) {
+          backgroundVideo.pause();
+        }
+        
+        resolve();
+      };
+    });
   }
 }
 
