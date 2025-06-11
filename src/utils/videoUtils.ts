@@ -63,28 +63,36 @@ class VideoExporter {
     if (!element) throw new Error('Element not found');
 
     try {
+      // Get the current template position and scale from the preview
+      const templateContainer = element.querySelector('.reddit-template') as HTMLElement;
+      const previewContainer = element.querySelector('[style*="translate"]') as HTMLElement;
+      
+      let templatePosition = { x: 0, y: 0 };
+      let templateScale = 1;
+      
+      if (previewContainer) {
+        const transform = previewContainer.style.transform;
+        const translateMatch = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (translateMatch) {
+          templatePosition.x = parseFloat(translateMatch[1]);
+          templatePosition.y = parseFloat(translateMatch[2]);
+        }
+      }
+      
+      if (templateContainer) {
+        const transform = templateContainer.style.transform;
+        const scaleMatch = transform.match(/scale\(([^)]+)\)/);
+        if (scaleMatch) {
+          templateScale = parseFloat(scaleMatch[1]);
+        }
+      }
+
+      console.log('Template position:', templatePosition, 'Scale:', templateScale);
+
       // Load the background video
       const backgroundVideo = await this.loadVideoFile(options.backgroundVideo);
       
-      // Capture the entire preview exactly as it appears
-      let previewCanvas: HTMLCanvasElement | null = null;
-      if (options.showRedditOverlay) {
-        console.log('Capturing preview...');
-        previewCanvas = await html2canvas(element, {
-          width: 540,
-          height: 960,
-          backgroundColor: null,
-          scale: 1,
-          useCORS: true,
-          allowTaint: true,
-          foreignObjectRendering: false,
-          imageTimeout: 0,
-          removeContainer: false,
-        });
-        console.log('Preview captured successfully');
-      }
-      
-      // Create canvas for final video
+      // Create canvas for compositing
       const canvas = document.createElement('canvas');
       canvas.width = 540;
       canvas.height = 960;
@@ -94,10 +102,31 @@ class VideoExporter {
         desynchronized: true
       })!;
       
-      // Try H.264/MP4 codec first
+      // Capture Reddit overlay once with proper positioning
+      let overlayCanvas: HTMLCanvasElement | null = null;
+      if (options.showRedditOverlay && templateContainer) {
+        // Temporarily reset position for clean capture
+        const originalTransform = templateContainer.style.transform;
+        templateContainer.style.transform = 'scale(1)';
+        
+        overlayCanvas = await html2canvas(templateContainer, {
+          width: 480,
+          height: 600,
+          backgroundColor: null,
+          scale: 1,
+          useCORS: true,
+          allowTaint: true,
+        });
+        
+        // Restore original transform
+        templateContainer.style.transform = originalTransform;
+      }
+      
+      // Use H.264/MP4 codec for better compatibility
       const stream = canvas.captureStream(30);
       let mediaRecorder: MediaRecorder;
       
+      // Try different codecs for MP4 support
       const codecOptions = [
         'video/mp4;codecs=avc1.42E01E',
         'video/webm;codecs=vp9',
@@ -124,6 +153,8 @@ class VideoExporter {
           chunks.push(e.data);
         }
       };
+
+      mediaRecorder.start(100); // Smaller chunks for smoother recording
 
       // Show progress
       const progressDiv = document.createElement('div');
@@ -156,10 +187,8 @@ class VideoExporter {
         totalFramesElement.textContent = totalFrames.toString();
       }
 
-      mediaRecorder.start(100);
-
-      // Process frames
-      const processFrame = async (): Promise<void> => {
+      // Optimized frame processing
+      const processFrame = (): Promise<void> => {
         return new Promise((resolve) => {
           if (frameCount >= totalFrames) {
             mediaRecorder.stop();
@@ -180,20 +209,21 @@ class VideoExporter {
           // Set video time
           backgroundVideo.currentTime = currentTime % backgroundVideo.duration;
           
+          // Use requestAnimationFrame for smoother rendering
           requestAnimationFrame(() => {
             // Clear canvas
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw background video
+            // Draw background video frame
             try {
               ctx.drawImage(backgroundVideo, 0, 0, canvas.width, canvas.height);
             } catch (error) {
               console.warn('Error drawing video frame:', error);
             }
             
-            // Draw the captured preview on top (exactly as it appears)
-            if (previewCanvas && options.showRedditOverlay) {
+            // Draw Reddit overlay with correct positioning
+            if (overlayCanvas && options.showRedditOverlay) {
               const overlayVisible = currentTime >= options.overlayStartTime && 
                 (!options.disappearAfterTime || currentTime <= options.overlayStartTime + options.overlayDuration);
               
@@ -203,7 +233,7 @@ class VideoExporter {
                 let alpha = 1;
                 let slideOffset = 0;
                 
-                // Calculate animations
+                // Calculate animation progress
                 const fadeInDuration = 0.5;
                 const fadeOutDuration = 1;
                 
@@ -224,11 +254,24 @@ class VideoExporter {
                   }
                 }
                 
+                // Apply the exact same positioning as in the preview
                 ctx.globalAlpha = alpha;
-                ctx.translate(slideOffset, 0);
                 
-                // Draw the entire captured preview (which includes the Reddit template in the exact position)
-                ctx.drawImage(previewCanvas, 0, 0, canvas.width, canvas.height);
+                // Calculate center position with user adjustments
+                const centerX = canvas.width / 2 + templatePosition.x + slideOffset;
+                const centerY = canvas.height / 2 + templatePosition.y;
+                
+                // Draw overlay with exact positioning and scaling
+                const scaledWidth = overlayCanvas.width * templateScale;
+                const scaledHeight = overlayCanvas.height * templateScale;
+                
+                ctx.drawImage(
+                  overlayCanvas,
+                  centerX - scaledWidth / 2,
+                  centerY - scaledHeight / 2,
+                  scaledWidth,
+                  scaledHeight
+                );
                 
                 ctx.restore();
               }
@@ -236,7 +279,7 @@ class VideoExporter {
             
             frameCount++;
             
-            // Use timeout for consistent frame timing
+            // Continue processing with proper timing
             setTimeout(() => {
               processFrame().then(resolve);
             }, 1000 / fps);
@@ -252,6 +295,7 @@ class VideoExporter {
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunks, { type: selectedCodec });
           
+          // Create download link with proper extension
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
