@@ -26,29 +26,10 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  const videoOptions = {
-    minecraft: {
-      label: "Minecraft",
-      url: "https://vimeo.com/1092266536/7a17cf4cf9"
-    },
-    'subway-surfers': {
-      label: "Subway Surfers", 
-      url: "https://vimeo.com/1092266136/db7b597083"
-    }
-  };
-
   const handleExport = async () => {
     setIsExporting(true);
     
     try {
-      // Scroll the preview into view
-      const previewElement = document.getElementById(elementId);
-      if (previewElement) {
-        previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Wait for scroll to complete
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
       await videoExporter.exportVideo(elementId, {
         totalDuration: totalDuration[0],
         overlayStartTime: overlayStartTime[0],
@@ -67,7 +48,7 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
       console.error('Export error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to export video. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to export video. Please make sure the video files are in the public/videos folder.",
         variant: "destructive",
       });
     } finally {
@@ -93,14 +74,11 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>How to export:</strong>
-            <ol className="list-decimal list-inside mt-2 space-y-1">
-              <li>Click "Export as WebM Video" below</li>
-              <li>When prompted, allow screen recording permission</li>
-              <li>Select "This Tab" or the browser tab showing this page</li>
-              <li>Keep the video preview visible during recording</li>
-              <li>The export will complete automatically after the set duration</li>
-            </ol>
+            <strong>Note:</strong> Make sure you have the background videos in your <code>public/videos/</code> folder:
+            <ul className="list-disc list-inside mt-1 text-sm">
+              <li>minecraft-background.mp4</li>
+              <li>subway-surfers-background.mp4</li>
+            </ul>
           </AlertDescription>
         </Alert>
 
@@ -214,7 +192,7 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
-                Background: {videoOptions[selectedVideo].label}
+                Background: {selectedVideo === 'minecraft' ? 'Minecraft' : 'Subway Surfers'}
                 {!disappearAfterTime && " • Overlay stays for full duration"}
               </div>
             </div>
@@ -231,7 +209,7 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
           </Button>
           
           <p className="text-xs text-muted-foreground text-center mt-2">
-            A progress indicator will appear during recording. Exports as WebM format - use a converter for MP4.
+            The export will show a progress bar. Exports as WebM format - use a converter for MP4 if needed.
           </p>
         </div>
       </CardContent>
