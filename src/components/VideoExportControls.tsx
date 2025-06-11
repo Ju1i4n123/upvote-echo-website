@@ -41,6 +41,14 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
     setIsExporting(true);
     
     try {
+      // Scroll the preview into view
+      const previewElement = document.getElementById(elementId);
+      if (previewElement) {
+        previewElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Wait for scroll to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       await videoExporter.exportVideo(elementId, {
         totalDuration: totalDuration[0],
         overlayStartTime: overlayStartTime[0],
@@ -85,8 +93,14 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Note:</strong> Due to browser security restrictions, capturing Vimeo videos requires screen recording permission. 
-            When prompted, please select the browser tab showing this page.
+            <strong>How to export:</strong>
+            <ol className="list-decimal list-inside mt-2 space-y-1">
+              <li>Click "Export as WebM Video" below</li>
+              <li>When prompted, allow screen recording permission</li>
+              <li>Select "This Tab" or the browser tab showing this page</li>
+              <li>Keep the video preview visible during recording</li>
+              <li>The export will complete automatically after the set duration</li>
+            </ol>
           </AlertDescription>
         </Alert>
 
@@ -217,7 +231,7 @@ export const VideoExportControls = ({ elementId, selectedVideo, onVideoChange }:
           </Button>
           
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Exports as WebM format. For MP4, use a video converter after download.
+            A progress indicator will appear during recording. Exports as WebM format - use a converter for MP4.
           </p>
         </div>
       </CardContent>

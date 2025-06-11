@@ -1,148 +1,6 @@
 import html2canvas from 'html2canvas';
 
 class VideoExporter {
-  private videoCache: Map<string, HTMLVideoElement> = new Map();
-
-  // Direct video URLs (you would need to host these or find publicly accessible ones)
-  private videoSources = {
-    'minecraft': '/videos/minecraft-background.mp4', // You'd need to add this to your public folder
-    'subway-surfers': '/videos/subway-surfers-background.mp4', // You'd need to add this to your public folder
-    // Alternative: Use public CDN URLs if available
-    // 'minecraft': 'https://example-cdn.com/minecraft-gameplay.mp4',
-  };
-
-  private async loadVideo(videoType: 'minecraft' | 'subway-surfers'): Promise<HTMLVideoElement> {
-    if (this.videoCache.has(videoType)) {
-      return this.videoCache.get(videoType)!;
-    }
-
-    const video = document.createElement('video');
-    video.crossOrigin = 'anonymous'; // Important for canvas access
-    video.muted = true;
-    video.loop = true;
-    
-    return new Promise((resolve, reject) => {
-      video.onloadeddata = () => {
-        this.videoCache.set(videoType, video);
-        resolve(video);
-      };
-      
-      video.onerror = () => {
-        console.error(`Failed to load video: ${videoType}`);
-        reject(new Error(`Failed to load video: ${videoType}`));
-      };
-      
-      // Try to load from video source
-      if (this.videoSources[videoType]) {
-        video.src = this.videoSources[videoType];
-      } else {
-        reject(new Error(`No video source for: ${videoType}`));
-      }
-    });
-  }
-
-  private async createAnimatedBackground(
-    ctx: CanvasRenderingContext2D,
-    videoType: 'minecraft' | 'subway-surfers',
-    frame: number,
-    width: number,
-    height: number
-  ) {
-    // Create animated backgrounds as fallback
-    if (videoType === 'minecraft') {
-      // Minecraft-style background
-      const blockSize = 40;
-      const time = frame / 30;
-      
-      // Sky gradient
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, '#87CEEB');
-      gradient.addColorStop(1, '#98D8E8');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-      
-      // Animated grass blocks
-      ctx.fillStyle = '#7CFC00';
-      for (let x = 0; x < width; x += blockSize) {
-        const yOffset = Math.sin((x + time * 50) / 100) * 20;
-        ctx.fillRect(x, height - 200 + yOffset, blockSize - 2, blockSize - 2);
-      }
-      
-      // Dirt blocks
-      ctx.fillStyle = '#8B4513';
-      for (let y = height - 160; y < height; y += blockSize) {
-        for (let x = 0; x < width; x += blockSize) {
-          ctx.fillRect(x, y, blockSize - 2, blockSize - 2);
-        }
-      }
-      
-      // Moving clouds
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      for (let i = 0; i < 3; i++) {
-        const cloudX = ((time * 20 + i * 200) % (width + 100)) - 50;
-        const cloudY = 50 + i * 60;
-        // Simple cloud shape
-        ctx.beginPath();
-        ctx.arc(cloudX, cloudY, 30, 0, Math.PI * 2);
-        ctx.arc(cloudX + 25, cloudY, 35, 0, Math.PI * 2);
-        ctx.arc(cloudX + 50, cloudY, 30, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-    } else if (videoType === 'subway-surfers') {
-      // Subway Surfers-style background
-      const time = frame / 30;
-      
-      // Gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, '#FF6B6B');
-      gradient.addColorStop(0.5, '#4ECDC4');
-      gradient.addColorStop(1, '#45B7D1');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-      
-      // Moving subway tracks
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 4;
-      
-      // Three lanes
-      const laneWidth = width / 3;
-      for (let lane = 0; lane < 3; lane++) {
-        const x = laneWidth * lane + laneWidth / 2;
-        
-        // Track lines
-        ctx.beginPath();
-        ctx.moveTo(x - 20, 0);
-        ctx.lineTo(x - 10, height);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(x + 20, 0);
-        ctx.lineTo(x + 10, height);
-        ctx.stroke();
-        
-        // Moving dashes
-        ctx.setLineDash([20, 30]);
-        ctx.beginPath();
-        ctx.moveTo(x, -time * 100 % 50);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-      
-      // Animated obstacles
-      const obstacleY = ((time * 200) % (height + 100)) - 50;
-      ctx.fillStyle = '#FFD93D';
-      ctx.fillRect(width / 2 - 30, obstacleY, 60, 80);
-      
-      // Score effect
-      ctx.fillStyle = '#FFF';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('SCORE: ' + Math.floor(time * 1000), width / 2, 40);
-    }
-  }
-
   async exportVideo(
     elementId: string,
     options: {
@@ -158,179 +16,207 @@ class VideoExporter {
     const element = document.getElementById(elementId);
     if (!element) throw new Error('Element not found');
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 540;
-    canvas.height = 960;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-    
-    const fps = 30;
-    const totalFrames = options.totalDuration * fps;
-    
-    // Try to load actual video
-    let backgroundVideo: HTMLVideoElement | null = null;
-    let useAnimatedBackground = false;
-    
     try {
-      backgroundVideo = await this.loadVideo(options.backgroundVideo);
-      backgroundVideo.currentTime = 0;
-      await backgroundVideo.play();
-    } catch (error) {
-      console.log('Using animated background as fallback');
-      useAnimatedBackground = true;
-    }
+      // Request screen capture permission
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30 }
+        },
+        audio: false
+      });
 
-    // Capture Reddit overlay
-    let overlayCanvas: HTMLCanvasElement | null = null;
-    if (options.showRedditOverlay) {
-      const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
-      if (redditOverlay) {
-        // Make sure overlay is visible for capture
-        const originalDisplay = redditOverlay.style.display;
-        const originalOpacity = redditOverlay.style.opacity;
-        redditOverlay.style.display = 'block';
-        redditOverlay.style.opacity = '1';
-        
-        overlayCanvas = await html2canvas(redditOverlay, {
-          width: 540,
-          height: 960,
-          backgroundColor: null,
-          scale: 1,
-        });
-        
-        // Restore original state
-        redditOverlay.style.display = originalDisplay;
-        redditOverlay.style.opacity = originalOpacity;
-      }
-    }
+      // Get the video track
+      const videoTrack = displayStream.getVideoTracks()[0];
+      const { width, height } = videoTrack.getSettings();
 
-    // Create video using MediaRecorder
-    const stream = canvas.captureStream(fps);
-    const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp9',
-      videoBitsPerSecond: 5000000 // 5 Mbps for better quality
-    });
+      // Create a canvas for recording
+      const canvas = document.createElement('canvas');
+      canvas.width = 540;
+      canvas.height = 960;
+      const ctx = canvas.getContext('2d')!;
 
-    const chunks: Blob[] = [];
-    
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        chunks.push(e.data);
-      }
-    };
+      // Create a video element to draw the screen capture
+      const video = document.createElement('video');
+      video.srcObject = displayStream;
+      video.autoplay = true;
 
-    mediaRecorder.start();
+      // Wait for video to be ready
+      await new Promise((resolve) => {
+        video.onloadedmetadata = resolve;
+      });
 
-    // Render frames
-    let frameCount = 0;
-    const renderFrame = async () => {
-      if (frameCount >= totalFrames) {
-        mediaRecorder.stop();
-        return;
-      }
-
-      const currentTime = frameCount / fps;
+      // Calculate the area to capture (assuming the preview is centered)
+      const previewElement = element;
+      const rect = previewElement.getBoundingClientRect();
       
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw background
-      if (backgroundVideo && !useAnimatedBackground) {
-        // Set video time for smooth playback
-        backgroundVideo.currentTime = currentTime % backgroundVideo.duration;
-        
-        // Draw video frame
-        ctx.drawImage(backgroundVideo, 0, 0, canvas.width, canvas.height);
-      } else {
-        // Use animated background
-        await this.createAnimatedBackground(ctx, options.backgroundVideo, frameCount, canvas.width, canvas.height);
-      }
-      
-      // Draw Reddit overlay if needed
-      if (overlayCanvas && options.showRedditOverlay) {
-        const overlayVisible = currentTime >= options.overlayStartTime && 
-          (!options.disappearAfterTime || currentTime <= options.overlayStartTime + options.overlayDuration);
-        
-        if (overlayVisible) {
-          ctx.save();
-          
-          let alpha = 1;
-          let transform = '';
-          
-          // Calculate animation progress
-          const fadeInDuration = 0.5;
-          const fadeOutDuration = 1;
-          
-          if (currentTime < options.overlayStartTime + fadeInDuration) {
-            // Fade in
-            const progress = (currentTime - options.overlayStartTime) / fadeInDuration;
-            alpha = progress;
-            transform = `scale(${0.8 + 0.2 * progress})`;
-          } else if (options.disappearAfterTime && options.exitAnimation !== 'none') {
-            const timeUntilEnd = (options.overlayStartTime + options.overlayDuration) - currentTime;
-            
-            if (timeUntilEnd < fadeOutDuration) {
-              const progress = 1 - (timeUntilEnd / fadeOutDuration);
-              
-              if (options.exitAnimation === 'fade') {
-                alpha = 1 - progress;
-              } else if (options.exitAnimation === 'slide') {
-                ctx.translate(-canvas.width * progress, 0);
-              }
-            }
-          }
-          
-          ctx.globalAlpha = alpha;
-          
-          // Apply transform
-          if (transform) {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            if (transform.includes('scale')) {
-              const scaleMatch = transform.match(/scale\(([\d.]+)\)/);
-              if (scaleMatch) {
-                const scale = parseFloat(scaleMatch[1]);
-                ctx.scale(scale, scale);
-              }
-            }
-            ctx.translate(-canvas.width / 2, -canvas.height / 2);
-          }
-          
-          ctx.drawImage(overlayCanvas, 0, 0);
-          ctx.restore();
+      // Scale factors
+      const scaleX = width! / window.innerWidth;
+      const scaleY = height! / window.innerHeight;
+
+      // Capture Reddit overlay if needed
+      let overlayCanvas: HTMLCanvasElement | null = null;
+      if (options.showRedditOverlay) {
+        const redditOverlay = element.querySelector('.absolute.inset-0.flex.items-center.justify-center > div') as HTMLElement;
+        if (redditOverlay) {
+          overlayCanvas = await html2canvas(redditOverlay, {
+            width: 540,
+            height: 960,
+            backgroundColor: null,
+            scale: 1,
+          });
         }
       }
-      
-      frameCount++;
-      
-      // Use requestAnimationFrame for smooth rendering
-      requestAnimationFrame(renderFrame);
-    };
 
-    // Start rendering
-    renderFrame();
+      // Set up MediaRecorder
+      const canvasStream = canvas.captureStream(30);
+      const mediaRecorder = new MediaRecorder(canvasStream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 5000000
+      });
 
-    // Wait for recording to complete
-    await new Promise<void>((resolve) => {
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        
-        // Download the video
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `reddit-story-${options.backgroundVideo}-${new Date().getTime()}.webm`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Cleanup
-        if (backgroundVideo) {
-          backgroundVideo.pause();
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
         }
-        
-        resolve();
       };
-    });
+
+      const fps = 30;
+      const totalFrames = options.totalDuration * fps;
+      let frameCount = 0;
+      const startTime = Date.now();
+
+      mediaRecorder.start();
+
+      // Show alert to user
+      const alertDiv = document.createElement('div');
+      alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #3B82F6;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 999999;
+        font-family: system-ui, -apple-system, sans-serif;
+      `;
+      alertDiv.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 4px;">Recording in progress...</div>
+        <div style="font-size: 14px;">Please keep the preview area visible</div>
+        <div style="font-size: 12px; margin-top: 8px; opacity: 0.9;">Duration: <span id="recording-time">0</span>s / ${options.totalDuration}s</div>
+      `;
+      document.body.appendChild(alertDiv);
+
+      const renderFrame = () => {
+        if (frameCount >= totalFrames) {
+          mediaRecorder.stop();
+          displayStream.getTracks().forEach(track => track.stop());
+          document.body.removeChild(alertDiv);
+          return;
+        }
+
+        const currentTime = frameCount / fps;
+        
+        // Update recording time
+        const timeElement = document.getElementById('recording-time');
+        if (timeElement) {
+          timeElement.textContent = currentTime.toFixed(1);
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the captured video area
+        ctx.drawImage(
+          video,
+          rect.left * scaleX,
+          rect.top * scaleY,
+          rect.width * scaleX,
+          rect.height * scaleY,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        // Draw Reddit overlay if needed
+        if (overlayCanvas && options.showRedditOverlay) {
+          const overlayVisible = currentTime >= options.overlayStartTime && 
+            (!options.disappearAfterTime || currentTime <= options.overlayStartTime + options.overlayDuration);
+          
+          if (overlayVisible) {
+            ctx.save();
+            
+            let alpha = 1;
+            
+            // Calculate animation progress
+            const fadeInDuration = 0.5;
+            const fadeOutDuration = 1;
+            
+            if (currentTime < options.overlayStartTime + fadeInDuration) {
+              // Fade in
+              const progress = (currentTime - options.overlayStartTime) / fadeInDuration;
+              alpha = progress;
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              ctx.scale(0.8 + 0.2 * progress, 0.8 + 0.2 * progress);
+              ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            } else if (options.disappearAfterTime && options.exitAnimation !== 'none') {
+              const timeUntilEnd = (options.overlayStartTime + options.overlayDuration) - currentTime;
+              
+              if (timeUntilEnd < fadeOutDuration) {
+                const progress = 1 - (timeUntilEnd / fadeOutDuration);
+                
+                if (options.exitAnimation === 'fade') {
+                  alpha = 1 - progress;
+                } else if (options.exitAnimation === 'slide') {
+                  ctx.translate(-canvas.width * progress, 0);
+                }
+              }
+            }
+            
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(overlayCanvas, 0, 0);
+            ctx.restore();
+          }
+        }
+        
+        frameCount++;
+        requestAnimationFrame(renderFrame);
+      };
+
+      // Start rendering
+      renderFrame();
+
+      // Wait for recording to complete
+      await new Promise<void>((resolve) => {
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          
+          // Download the video
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `reddit-story-${options.backgroundVideo}-${new Date().getTime()}.webm`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          resolve();
+        };
+      });
+
+    } catch (error) {
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        throw new Error('Screen recording permission denied. Please allow screen recording and try again.');
+      }
+      throw error;
+    }
   }
 }
 
