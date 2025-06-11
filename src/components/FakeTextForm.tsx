@@ -123,7 +123,7 @@ export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
           <Input
             value={textData.recipientName}
             onChange={(e) => updateField("recipientName", e.target.value)}
-            placeholder="e.g. Postfully"
+            placeholder="e.g. VirAI"
             className="h-9 bg-background shadow-xs ring ring-inset ring-gray-200 border-0"
           />
         </div>
@@ -134,7 +134,7 @@ export const FakeTextForm = ({ textData, setTextData }: FakeTextFormProps) => {
           <Input
             value={textData.messageInput}
             onChange={(e) => updateField("messageInput", e.target.value)}
-            placeholder="e.g. Postfully.app"
+            placeholder="e.g. VirAI"
             className="h-9 bg-background shadow-xs ring ring-inset ring-gray-200 border-0"
           />
         </div>

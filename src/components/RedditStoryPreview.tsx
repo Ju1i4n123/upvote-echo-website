@@ -231,7 +231,7 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, sele
                       WebkitFontSmoothing: 'antialiased',
                       MozOsxFontSmoothing: 'grayscale'
                     }}>
-                      {postData.subreddit || "postfully.app"}
+                      {postData.subreddit || "VirAI"}
                     </span>
                     {postData.badge === "Verified" && (
                       <VerifiedIcon className="mb-[calc(1px*var(--scaling))] inline size-[calc(18px*var(--scaling))]" />

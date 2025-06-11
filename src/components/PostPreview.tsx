@@ -75,7 +75,7 @@ export const PostPreview = ({ postData }: PostPreviewProps) => {
                   WebkitFontSmoothing: 'antialiased',
                   MozOsxFontSmoothing: 'grayscale'
                 }}>
-                  {postData.subreddit || "postfully.app"}
+                  {postData.subreddit || "VirAI"}
                 </span>
                 {postData.badge === "Verified" && (
                   <VerifiedIcon className="mb-[calc(1px*var(--scaling))] inline size-[calc(12px*var(--scaling))]" />

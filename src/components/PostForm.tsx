@@ -66,7 +66,7 @@ export const PostForm = ({ postData, setPostData }: PostFormProps) => {
           <Input
             value={postData.subreddit}
             onChange={(e) => updateField("subreddit", e.target.value)}
-            placeholder="postfully.app"
+            placeholder="VirAI"
             maxLength={23}
             className="h-9 bg-background shadow-xs ring ring-inset ring-gray-200 border-0"
           />

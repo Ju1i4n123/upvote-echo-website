@@ -27,7 +27,7 @@ export const InputArea = ({ textData }: InputAreaProps) => {
           <span className={`flex-1 truncate text-[13px] font-sf-pro ${
             textData.mode === "dark" ? "text-[#8E8E93]" : "text-[#C1C2C4]"
           }`}>
-            {textData.messageInput || "Postfully.app"}
+            {textData.messageInput || "VirAI"}
           </span>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`size-[16px] ${
             textData.mode === "dark" ? "text-[#8E8E93]" : "text-[#ACB4B7]"
