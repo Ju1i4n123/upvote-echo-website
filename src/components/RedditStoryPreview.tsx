@@ -5,9 +5,9 @@ import { UpvoteIcon } from "@/components/icons/UpvoteIcon";
 import { CommentIcon } from "@/components/icons/CommentIcon";
 import { VerifiedIcon } from "@/components/icons/VerifiedIcon";
 import { ShareIcon } from "@/components/icons/ShareIcon";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Move, RotateCcw } from "lucide-react";
 import { downloadRedditPost } from "@/utils/imageUtils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface RedditStoryPreviewProps {
   postData: PostData;
@@ -18,6 +18,12 @@ interface RedditStoryPreviewProps {
 
 export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, selectedVideo = 'minecraft' }: RedditStoryPreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const templateRef = useRef<HTMLDivElement>(null);
+  const [templatePosition, setTemplatePosition] = useState({ x: 0, y: 0 });
+  const [templateScale, setTemplateScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const videoOptions = {
     minecraft: {
@@ -64,6 +70,41 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, sele
     animate();
   }, []);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === templateRef.current) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - templatePosition.x,
+        y: e.clientY - templatePosition.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setTemplatePosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setTemplateScale(prev => Math.max(0.3, Math.min(2, prev + delta)));
+  };
+
+  const resetPosition = () => {
+    setTemplatePosition({ x: 0, y: 0 });
+    setTemplateScale(1);
+  };
+
   const formatCount = (count: string) => {
     if (postData.approximateCounts && count) {
       return count + "+";
@@ -82,33 +123,48 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, sele
   return (
     <div className="flex flex-1 flex-col rounded-xl bg-gray-50 ring ring-gray-100">
       {/* Header with Reset and Download */}
-      <div className="flex justify-end space-x-1.5 p-3">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500"
-          onClick={handleReset}
-        >
-          Reset
-        </Button>
-        {onPlayAudio && (
+      <div className="flex justify-between items-center p-3">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Move className="size-4" />
+          <span>Drag to move • Scroll to resize</span>
+        </div>
+        <div className="flex space-x-1.5">
           <Button 
-            variant="outline"
+            variant="outline" 
             size="sm" 
             className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500"
-            onClick={onPlayAudio}
-            disabled={isPlayingAudio}
+            onClick={resetPosition}
           >
-            {isPlayingAudio ? "Playing..." : "Play Audio"}
+            <RotateCcw className="size-3 mr-1" />
+            Reset Position
           </Button>
-        )}
-        <Button 
-          size="sm" 
-          className="h-7.5 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={handleDownload}
-        >
-          Download
-        </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500"
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
+          {onPlayAudio && (
+            <Button 
+              variant="outline"
+              size="sm" 
+              className="h-7.5 text-sm rounded-full border-gray-200 bg-gray-50 hover:border-gray-300 text-gray-500"
+              onClick={onPlayAudio}
+              disabled={isPlayingAudio}
+            >
+              {isPlayingAudio ? "Playing..." : "Play Audio"}
+            </Button>
+          )}
+          <Button 
+            size="sm" 
+            className="h-7.5 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={handleDownload}
+          >
+            Download
+          </Button>
+        </div>
       </div>
 
       {/* 9:16 Video Container with Reddit Overlay */}
@@ -116,6 +172,9 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, sele
         <div 
           id="reddit-story-preview"
           className="relative w-[540px] h-[960px] max-w-[calc(540px*var(--scaling))] max-h-[calc(960px*var(--scaling))] [--scaling:0.7] max-sm:[--scaling:0.4] bg-black rounded-lg overflow-hidden shadow-lg"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           {/* Vimeo Video Background - 9:16 format */}
           <iframe
@@ -133,13 +192,27 @@ export const RedditStoryPreview = ({ postData, onPlayAudio, isPlayingAudio, sele
             className="absolute inset-0 w-full h-full object-cover -z-10"
           />
 
-          {/* Reddit Post Overlay - Positioned in center */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* Reddit Post Overlay - Draggable and Resizable */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              transform: `translate(${templatePosition.x}px, ${templatePosition.y}px)`
+            }}
+          >
             <div 
-              className={`flex max-w-[calc(480px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 ${
+              ref={templateRef}
+              className={`reddit-template flex max-w-[calc(480px*var(--scaling))] flex-col gap-[calc(15px*var(--scaling))] rounded-[calc(15px*var(--scaling))] p-[calc(25px*var(--scaling))] font-[Inter,_sans-serif] shadow-2xl border-2 border-white/20 cursor-move select-none ${
                 postData.darkMode ? 'bg-[#0e1113] text-white' : 'bg-white'
-              } ${postData.wideLayout ? 'max-w-[calc(520px*var(--scaling))]' : ''}`}
-              style={{ fontFeatureSettings: 'normal' }}
+              } ${postData.wideLayout ? 'max-w-[calc(520px*var(--scaling))]' : ''} ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              style={{ 
+                fontFeatureSettings: 'normal',
+                transform: `scale(${templateScale})`,
+                transformOrigin: 'center center'
+              }}
+              onMouseDown={handleMouseDown}
+              onWheel={handleWheel}
             >
               {/* User Info */}
               <div className="flex items-center gap-[calc(12px*var(--scaling))]">
